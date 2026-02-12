@@ -46,13 +46,17 @@ body {
     radial-gradient(1300px 700px at -10% -10%, var(--bg-glow-1), transparent 52%),
     radial-gradient(1400px 800px at 110% -20%, var(--bg-glow-2), transparent 56%),
     linear-gradient(165deg, var(--bg) 0%, var(--bg-alt) 42%, var(--bg-grad-end) 100%);
+  overflow: hidden;
 }
 
 .app-shell {
   width: min(2120px, 100%);
-  min-height: 100vh;
+  height: 100vh;
   margin: 0 auto;
-  padding: 12px;
+  padding: 10px;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 8px;
 }
 
 .toolbar,
@@ -85,7 +89,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 14px;
+  padding: 9px 12px;
 }
 
 .title-wrap {
@@ -112,7 +116,7 @@ h1 {
 .subtitle {
   margin: 0;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.75rem;
 }
 
 .controls {
@@ -181,8 +185,8 @@ textarea:focus {
 
 .summary,
 .filters {
-  margin-top: 10px;
-  padding: 10px 12px;
+  margin-top: 0;
+  padding: 8px 10px;
 }
 
 .summary {
@@ -195,8 +199,8 @@ textarea:focus {
 .summary-pill {
   border-radius: 999px;
   border: 1px solid var(--line-soft);
-  padding: 5px 11px;
-  font-size: 0.75rem;
+  padding: 4px 9px;
+  font-size: 0.69rem;
   font-weight: 700;
 }
 
@@ -211,14 +215,14 @@ textarea:focus {
 
 .summary-meta {
   margin-left: auto;
-  font-size: 0.77rem;
+  font-size: 0.7rem;
   color: var(--muted);
 }
 
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 6px 10px;
 }
 
 #search-input {
@@ -226,22 +230,35 @@ textarea:focus {
 }
 
 .cards {
-  margin-top: 10px;
+  margin-top: 0;
   display: grid;
-  gap: 10px;
+  gap: 8px;
   grid-auto-flow: row dense;
+  min-height: 0;
+  height: 100%;
+  align-content: stretch;
 }
 
 body[data-orientation="horizontal"] .cards {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: repeat(24, minmax(0, 1fr));
 }
 
 body[data-orientation="vertical"] .cards {
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(18, minmax(0, 1fr));
 }
 
-body[data-orientation="horizontal"] .card { grid-column: span 3; }
-body[data-orientation="vertical"] .card { grid-column: span 4; }
+body[data-orientation="horizontal"] .card { grid-column: span 4; }
+body[data-orientation="vertical"] .card { grid-column: span 6; }
+
+body.glance-mode .cards {
+  grid-template-columns: repeat(var(--glance-columns, 6), minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+body.glance-mode .card {
+  grid-column: span 1;
+  min-height: 0;
+}
 
 body[data-density="comfortable"] .card {
   min-height: 340px;
@@ -252,16 +269,16 @@ body[data-density="dense"] .card {
 }
 
 body[data-density="max"] .cards {
-  gap: 7px;
+  gap: 6px;
 }
 
 body[data-density="max"] .card {
-  min-height: 238px;
+  min-height: 210px;
 }
 
 .card {
   background: linear-gradient(160deg, rgba(8, 20, 38, 0.96) 2%, rgba(7, 18, 34, 0.92) 56%, rgba(8, 24, 46, 0.96) 100%);
-  padding: 9px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -320,13 +337,15 @@ body[data-density="max"] .card {
 }
 
 .card-actions button {
-  font-size: 0.68rem;
-  padding: 5px 10px;
+  font-size: 0.63rem;
+  padding: 4px 8px;
 }
 
 .payload {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  min-height: 0;
+  overflow: auto;
 }
 
 .panel-viz {
@@ -526,7 +545,7 @@ body[data-density="max"] .card {
   display: grid;
   gap: 2px;
   color: var(--muted);
-  font-size: 0.69rem;
+  font-size: 0.64rem;
 }
 
 .error {
@@ -552,6 +571,10 @@ body.wallboard .filters {
 
 body.wallboard .summary {
   margin-top: 0;
+}
+
+main {
+  min-height: 0;
 }
 
 .modal {
@@ -676,6 +699,16 @@ body.wallboard .summary {
 }
 
 @media (max-width: 1260px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-shell {
+    height: auto;
+    min-height: 100vh;
+    grid-template-rows: auto auto auto auto;
+  }
+
   .toolbar {
     position: static;
   }
@@ -687,5 +720,10 @@ body.wallboard .summary {
   body[data-orientation="horizontal"] .card,
   body[data-orientation="vertical"] .card {
     grid-column: span 6;
+  }
+
+  body.glance-mode .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: auto;
   }
 }

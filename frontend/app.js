@@ -25,6 +25,7 @@ const categoryFilter = document.getElementById("category-filter");
 const brandPaletteSelect = document.getElementById("brand-palette");
 const layoutModeSelect = document.getElementById("layout-mode");
 const densityModeSelect = document.getElementById("density-mode");
+const toggleGlanceBtn = document.getElementById("toggle-glance");
 const cfgUnitSystem = document.getElementById("cfg-unit-system");
 const cfgBrandPalette = document.getElementById("cfg-brand-palette");
 
@@ -174,6 +175,7 @@ const BRAND_PALETTE_STORAGE_KEY = "dashboard_brand_palette_v1";
 const SETTINGS_COLLAPSE_STORAGE_KEY = "dashboard_settings_collapsed_v1";
 const LAYOUT_MODE_STORAGE_KEY = "dashboard_layout_mode_v1";
 const DENSITY_MODE_STORAGE_KEY = "dashboard_density_mode_v1";
+const GLANCE_MODE_STORAGE_KEY = "dashboard_glance_mode_v1";
 const BRAND_PALETTES = {
   fleet: { bg: "#E9EEF6", bg_alt: "#DCE5F1", surface: "#F8FAFD", text: "#101B2D", muted: "#55657E", accent: "#1657A5", ok: "#158B5C", warn: "#A76A16", error: "#BE3B30" },
   boeing: { bg: "#E8EEF5", bg_alt: "#D5E0EE", surface: "#F7FAFD", text: "#0D1B2A", muted: "#4C5D73", accent: "#0039A6", ok: "#1C8B5A", warn: "#9E7212", error: "#BF3A2A" },
@@ -183,10 +185,12 @@ const BRAND_PALETTES = {
 };
 const DEFAULT_BRAND_PALETTE = "fleet";
 const DEFAULT_LAYOUT_MODE = "auto";
-const DEFAULT_DENSITY_MODE = "dense";
+const DEFAULT_DENSITY_MODE = "max";
+const DEFAULT_GLANCE_MODE = true;
 
 let preferredLayoutMode = DEFAULT_LAYOUT_MODE;
 let preferredDensityMode = DEFAULT_DENSITY_MODE;
+let glanceMode = DEFAULT_GLANCE_MODE;
 
 function toTitle(text) {
   return text.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -279,6 +283,16 @@ function saveDensityMode(mode) {
   localStorage.setItem(DENSITY_MODE_STORAGE_KEY, normalizeDensityMode(mode));
 }
 
+function loadGlanceMode() {
+  const raw = localStorage.getItem(GLANCE_MODE_STORAGE_KEY);
+  if (raw == null) return DEFAULT_GLANCE_MODE;
+  return raw === "1";
+}
+
+function saveGlanceMode(enabled) {
+  localStorage.setItem(GLANCE_MODE_STORAGE_KEY, enabled ? "1" : "0");
+}
+
 function activeOrientation() {
   if (preferredLayoutMode !== DEFAULT_LAYOUT_MODE) {
     return preferredLayoutMode;
@@ -291,8 +305,26 @@ function applyLayoutAndDensity() {
   document.body.dataset.orientation = orientation;
   document.body.dataset.layout = preferredLayoutMode;
   document.body.dataset.density = preferredDensityMode;
+  document.body.classList.toggle("glance-mode", glanceMode);
+  if (toggleGlanceBtn) {
+    toggleGlanceBtn.textContent = glanceMode ? "Glance On" : "Glance Off";
+  }
   if (layoutModeSelect) layoutModeSelect.value = preferredLayoutMode;
   if (densityModeSelect) densityModeSelect.value = preferredDensityMode;
+}
+
+function applyGlanceColumns(sourceCount) {
+  if (!glanceMode) {
+    cardsContainer.style.removeProperty("--glance-columns");
+    return;
+  }
+  const orientation = activeOrientation();
+  const targetRows = orientation === "horizontal" ? 4 : 5;
+  const minCols = orientation === "horizontal" ? 4 : 3;
+  const maxCols = orientation === "horizontal" ? 8 : 6;
+  const calculated = Math.ceil(Math.max(sourceCount, 1) / targetRows);
+  const cols = Math.max(minCols, Math.min(maxCols, calculated));
+  cardsContainer.style.setProperty("--glance-columns", `${cols}`);
 }
 
 function applyTheme(theme = {}) {
@@ -1342,6 +1374,7 @@ function renderSummary(snapshot) {
     source_count: snapshot.source_count,
     orientation,
     density: preferredDensityMode,
+    glance: glanceMode,
   });
   if (signature === lastSummarySignature) {
     return;
@@ -1354,6 +1387,7 @@ function renderSummary(snapshot) {
     <div class="summary-pill summary-error">Error: ${counts.error}</div>
     <div class="summary-pill summary-orientation">${toTitle(orientation)} Layout</div>
     <div class="summary-pill summary-density">${toTitle(preferredDensityMode)} Density</div>
+    <div class="summary-pill summary-density">${glanceMode ? "Glance On" : "Glance Off"}</div>
     <div class="summary-meta">Sources: ${snapshot.source_count} | Generated: ${new Date(snapshot.generated_at).toLocaleTimeString()}</div>
   `;
 }
@@ -1369,6 +1403,7 @@ function render(snapshot) {
   }
   renderSummary(snapshot);
   const visibleSources = sortSourcesByOrder(snapshot.sources.filter(sourceMatchesFilter));
+  applyGlanceColumns(visibleSources.length);
   const visibleSet = new Set(visibleSources.map((s) => s.source));
   const now = Date.now();
   const shouldRefreshRelativeTimes = now - lastTimestampRefreshAt >= 5000;
@@ -2256,6 +2291,13 @@ densityModeSelect?.addEventListener("change", () => {
   preferredDensityMode = normalizeDensityMode(densityModeSelect.value);
   saveDensityMode(preferredDensityMode);
   applyLayoutAndDensity();
+  if (snapshotCache) render(snapshotCache);
+});
+toggleGlanceBtn?.addEventListener("click", () => {
+  glanceMode = !glanceMode;
+  saveGlanceMode(glanceMode);
+  applyLayoutAndDensity();
+  if (snapshotCache) render(snapshotCache);
 });
 wallboardBtn.addEventListener("click", () => {
   document.body.classList.toggle("wallboard");
@@ -2324,6 +2366,7 @@ currentBrandPalette = loadBrandPalette();
 applyVisualSettings({ palette: currentBrandPalette });
 preferredLayoutMode = loadLayoutMode();
 preferredDensityMode = loadDensityMode();
+glanceMode = loadGlanceMode();
 applyLayoutAndDensity();
 loadSnapshot();
 startAutoRefresh();

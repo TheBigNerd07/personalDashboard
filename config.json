@@ -25,21 +25,21 @@
       "cache_ttl": 1
     },
     "stock_1": {
-      "enabled": true,
+      "enabled": false,
       "symbol": "AAPL",
       "poll_interval": 2,
       "cache_ttl": 2,
       "timeout_s": 6
     },
     "stock_2": {
-      "enabled": true,
+      "enabled": false,
       "symbol": "MSFT",
       "poll_interval": 2,
       "cache_ttl": 2,
       "timeout_s": 6
     },
     "stock_3": {
-      "enabled": true,
+      "enabled": false,
       "symbol": "NVDA",
       "poll_interval": 2,
       "cache_ttl": 2,
@@ -138,7 +138,7 @@
       ]
     },
     "youtube_subscriptions": {
-      "enabled": true,
+      "enabled": false,
       "poll_interval": 60,
       "cache_ttl": 20,
       "timeout_s": 8,
@@ -180,21 +180,21 @@
       ]
     },
     "crypto_price": {
-      "enabled": true,
+      "enabled": false,
       "symbol": "BTC-USD",
       "poll_interval": 8,
       "cache_ttl": 4,
       "timeout_s": 6
     },
     "hn_trends": {
-      "enabled": true,
+      "enabled": false,
       "top_n": 8,
       "poll_interval": 45,
       "cache_ttl": 20,
       "timeout_s": 8
     },
     "earthquakes": {
-      "enabled": true,
+      "enabled": false,
       "max_events": 6,
       "poll_interval": 30,
       "cache_ttl": 12,
@@ -209,7 +209,7 @@
       "timeout_s": 6
     },
     "air_quality": {
-      "enabled": true,
+      "enabled": false,
       "latitude": 47.6588,
       "longitude": -117.426,
       "poll_interval": 25,
@@ -217,7 +217,7 @@
       "timeout_s": 8
     },
     "iss_position": {
-      "enabled": true,
+      "enabled": false,
       "poll_interval": 5,
       "cache_ttl": 3,
       "timeout_s": 5
@@ -233,7 +233,7 @@
       "cache_ttl": 15
     },
     "market_indices": {
-      "enabled": true,
+      "enabled": false,
       "symbols": [
         "^GSPC",
         "^IXIC",
@@ -245,7 +245,7 @@
       "timeout_s": 6
     },
     "fx_rates": {
-      "enabled": true,
+      "enabled": false,
       "base_currency": "USD",
       "symbols": [
         "EUR",
@@ -259,19 +259,19 @@
       "timeout_s": 6
     },
     "space_weather": {
-      "enabled": true,
+      "enabled": false,
       "poll_interval": 20,
       "cache_ttl": 10,
       "timeout_s": 6
     },
     "quote_of_day": {
-      "enabled": true,
+      "enabled": false,
       "poll_interval": 120,
       "cache_ttl": 60,
       "timeout_s": 6
     },
     "mempool_fees": {
-      "enabled": true,
+      "enabled": false,
       "poll_interval": 15,
       "cache_ttl": 8,
       "timeout_s": 6
@@ -284,13 +284,13 @@
       "limit": 8
     },
     "solar_xray": {
-      "enabled": true,
+      "enabled": false,
       "poll_interval": 25,
       "cache_ttl": 10,
       "timeout_s": 8
     },
     "crypto_global": {
-      "enabled": true,
+      "enabled": false,
       "poll_interval": 20,
       "cache_ttl": 10,
       "timeout_s": 8
