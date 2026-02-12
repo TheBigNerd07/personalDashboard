@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import asyncio
+import httpx
 
 from backend.providers.mock_market_provider import MockMarketProvider
 from backend.providers.public_status_provider import PublicStatusProvider
@@ -668,3 +669,36 @@ def test_travel_time_fetch_with_address_geocoding(monkeypatch):
     raw = asyncio.run(provider.fetch())
     assert raw["routes"][0]["name"] == "Airport"
     assert raw["routes"][0]["minutes"] == 20
+
+
+def test_travel_time_fetch_handles_geocode_failure_without_crashing(monkeypatch):
+    provider = TravelTimeProvider(
+        origin={"name": "Home", "address": "Bad Origin"},
+        destinations=[{"name": "Office", "address": "Bad Destination"}],
+    )
+
+    class FakeResponse:
+        status_code = 429
+
+        def raise_for_status(self):
+            request = httpx.Request("GET", "https://nominatim.openstreetmap.org/search")
+            response = httpx.Response(429, request=request)
+            raise httpx.HTTPStatusError("rate limited", request=request, response=response)
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def get(self, url, params=None, headers=None):
+            return FakeResponse()
+
+    monkeypatch.setattr("backend.providers.travel_time_provider.httpx.AsyncClient", FakeClient)
+    raw = asyncio.run(provider.fetch())
+    assert raw["routes"][0]["status"] == "error"
+    assert "Origin" in raw["routes"][0]["error"]

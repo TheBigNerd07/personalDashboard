@@ -30,6 +30,7 @@ const densityModeSelect = document.getElementById("density-mode");
 const toggleGlanceBtn = document.getElementById("toggle-glance");
 const cfgUnitSystem = document.getElementById("cfg-unit-system");
 const cfgBrandPalette = document.getElementById("cfg-brand-palette");
+const cfgLayoutMode = document.getElementById("cfg-layout-mode");
 
 const cfgGlobalRefreshRate = document.getElementById("cfg-global-refresh-rate");
 const cfgHistorySize = document.getElementById("cfg-history-size");
@@ -1848,6 +1849,7 @@ function populateSettingsForm(cfg) {
   cfgHistorySize.value = cfg.history_size ?? 20;
   cfgUnitSystem.value = (cfg.unit_system || "metric").toLowerCase() === "imperial" ? "imperial" : "metric";
   if (cfgBrandPalette) cfgBrandPalette.value = palette;
+  if (cfgLayoutMode) cfgLayoutMode.value = preferredLayoutMode;
 
   cfgWeatherEnabled.checked = Boolean(weather.enabled);
   cfgWeatherCity.value = weather.city ?? "";
@@ -2290,6 +2292,7 @@ function setAllModulesEnabled(enabled) {
 
 async function saveSettings() {
   const parsed = buildConfigFromForm();
+  const nextLayoutMode = normalizeLayoutMode(cfgLayoutMode?.value || preferredLayoutMode);
 
   setSettingsStatus("Saving and applying...");
   const response = await fetch("/api/settings", {
@@ -2308,6 +2311,9 @@ async function saveSettings() {
   settingsCache = parsed;
   saveBrandPalette(parsed.brand_palette || DEFAULT_BRAND_PALETTE);
   applyVisualSettings({ palette: parsed.brand_palette || DEFAULT_BRAND_PALETTE });
+  preferredLayoutMode = nextLayoutMode;
+  saveLayoutMode(preferredLayoutMode);
+  applyLayoutAndDensity();
   await loadSnapshot();
 }
 

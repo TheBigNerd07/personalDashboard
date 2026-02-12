@@ -24,14 +24,6 @@
           <button id="toggle-pause">Pause</button>
           <button id="toggle-arrange">Sort</button>
           <label>
-            Layout
-            <select id="layout-mode">
-              <option value="auto">Auto</option>
-              <option value="horizontal">Horizontal</option>
-              <option value="vertical">Vertical</option>
-            </select>
-          </label>
-          <label>
             Density
             <select id="density-mode">
               <option value="comfortable">Comfort</option>
@@ -157,6 +149,13 @@
                 <option value="alaska">Alaska Airlines</option>
                 <option value="jetblue">jetBlue</option>
                 <option value="blueorigin">Blue Origin</option>
+              </select>
+            </label>
+            <label>Layout Mode
+              <select id="cfg-layout-mode">
+                <option value="auto">Auto</option>
+                <option value="horizontal">Horizontal</option>
+                <option value="vertical">Vertical</option>
               </select>
             </label>
             <label>Global Refresh Rate <input id="cfg-global-refresh-rate" type="number" min="0.1" step="0.1" /></label>

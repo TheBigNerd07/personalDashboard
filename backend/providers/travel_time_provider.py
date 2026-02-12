@@ -26,6 +26,19 @@ class TravelTimeProvider(BaseProvider):
         self.timeout_s = timeout_s
         self._geocode_cache: Dict[str, Tuple[float, float]] = {}
 
+    @staticmethod
+    def _http_error_message(exc: Exception, context: str) -> str:
+        if isinstance(exc, httpx.HTTPStatusError):
+            code = exc.response.status_code
+            if code == 429:
+                return f"{context} rate limited (HTTP 429)"
+            if code == 509:
+                return f"{context} bandwidth limit reached (HTTP 509)"
+            return f"{context} failed (HTTP {code})"
+        if isinstance(exc, httpx.RequestError):
+            return f"{context} network error"
+        return f"{context} failed"
+
     async def _geocode_address(self, client: httpx.AsyncClient, address: str) -> Tuple[float, float] | None:
         key = (address or "").strip()
         if not key:
@@ -33,20 +46,26 @@ class TravelTimeProvider(BaseProvider):
         if key in self._geocode_cache:
             return self._geocode_cache[key]
 
-        response = await client.get(
-            "https://nominatim.openstreetmap.org/search",
-            params={"q": key, "format": "jsonv2", "limit": 1},
-            headers={"User-Agent": "personalDashboard/1.0"},
-        )
-        response.raise_for_status()
-        payload = response.json()
-        if not payload:
+        try:
+            response = await client.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={"q": key, "format": "jsonv2", "limit": 1},
+                headers={"User-Agent": "personalDashboard/1.0"},
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except Exception:
             return None
 
-        lat = float(payload[0]["lat"])
-        lon = float(payload[0]["lon"])
-        self._geocode_cache[key] = (lat, lon)
-        return lat, lon
+        try:
+            if not payload:
+                return None
+            lat = float(payload[0]["lat"])
+            lon = float(payload[0]["lon"])
+            self._geocode_cache[key] = (lat, lon)
+            return lat, lon
+        except Exception:
+            return None
 
     async def _resolve_point(self, client: httpx.AsyncClient, point: Dict[str, Any]) -> Tuple[float, float] | None:
         lat = point.get("latitude")
@@ -60,17 +79,32 @@ class TravelTimeProvider(BaseProvider):
 
         return None
 
-    async def _route_to_destination(self, client: httpx.AsyncClient, destination: Dict[str, Any]) -> Dict[str, Any]:
-        origin_coords = await self._resolve_point(client, self.origin)
-        dest_coords = await self._resolve_point(client, destination)
-
-        if origin_coords is None or dest_coords is None:
+    async def _route_to_destination(
+        self,
+        client: httpx.AsyncClient,
+        destination: Dict[str, Any],
+        origin_coords: Tuple[float, float] | None,
+        origin_error: str | None = None,
+    ) -> Dict[str, Any]:
+        destination_name = destination.get("name") or destination.get("address") or "Unknown"
+        if origin_coords is None:
             return {
-                "name": destination.get("name") or destination.get("address") or "Unknown",
+                "name": destination_name,
                 "minutes": None,
                 "distance_km": None,
                 "status": "error",
-                "error": "Invalid or unresolved origin/destination",
+                "error": origin_error or "Origin could not be resolved",
+            }
+
+        dest_coords = await self._resolve_point(client, destination)
+
+        if dest_coords is None:
+            return {
+                "name": destination_name,
+                "minutes": None,
+                "distance_km": None,
+                "status": "error",
+                "error": "Destination could not be resolved",
             }
 
         origin_lat, origin_lon = origin_coords
@@ -92,7 +126,7 @@ class TravelTimeProvider(BaseProvider):
             duration_s = float(route.get("duration", 0))
             distance_m = float(route.get("distance", 0))
             return {
-                "name": destination.get("name") or destination.get("address") or "Unknown",
+                "name": destination_name,
                 "minutes": round(duration_s / 60.0),
                 "distance_km": round(distance_m / 1000.0, 1),
                 "status": "ok",
@@ -100,11 +134,11 @@ class TravelTimeProvider(BaseProvider):
             }
         except Exception as exc:
             return {
-                "name": destination.get("name") or destination.get("address") or "Unknown",
+                "name": destination_name,
                 "minutes": None,
                 "distance_km": None,
                 "status": "error",
-                "error": str(exc),
+                "error": self._http_error_message(exc, "Routing"),
             }
 
     async def fetch(self) -> Dict[str, Any]:
@@ -113,8 +147,18 @@ class TravelTimeProvider(BaseProvider):
 
         timeout = httpx.Timeout(self.timeout_s)
         async with httpx.AsyncClient(timeout=timeout) as client:
+            origin_coords = await self._resolve_point(client, self.origin)
+            origin_error = None if origin_coords is not None else "Origin could not be resolved"
             routes = await asyncio.gather(
-                *(self._route_to_destination(client, destination) for destination in self.destinations)
+                *(
+                    self._route_to_destination(
+                        client=client,
+                        destination=destination,
+                        origin_coords=origin_coords,
+                        origin_error=origin_error,
+                    )
+                    for destination in self.destinations
+                )
             )
 
         return {"origin": self.origin, "routes": routes}

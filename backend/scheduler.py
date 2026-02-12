@@ -131,7 +131,7 @@ class DataScheduler:
     @staticmethod
     def _is_rate_limited_error(exc: Exception) -> bool:
         text = str(exc).lower()
-        return "rate limit" in text or "429" in text
+        return "rate limit" in text or "429" in text or "509" in text or "bandwidth" in text
 
     @staticmethod
     def _compact_error_message(exc: Exception) -> str:
@@ -140,10 +140,12 @@ class DataScheduler:
             return "Request failed"
 
         lower = text.lower()
-        if "rate limit" in lower or "429" in lower:
+        if "rate limit" in lower or "429" in lower or "509" in lower or "bandwidth" in lower:
             retry = re.search(r"retry\s+(?:after|in)\s+(\d+)\s*s", lower)
             if retry:
                 return f"Rate limited. Retry in {retry.group(1)}s"
+            if "509" in lower or "bandwidth" in lower:
+                return "Bandwidth limit reached upstream (HTTP 509)"
             return "Rate limited by upstream (HTTP 429)"
 
         if len(text) > 220:

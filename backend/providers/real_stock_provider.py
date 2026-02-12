@@ -39,14 +39,16 @@ class RealStockProvider(BaseProvider):
 
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.get(url, params=params)
-            if response.status_code == 429:
+            if response.status_code in (429, 509):
                 retry_after = response.headers.get("Retry-After")
                 try:
-                    retry_seconds = max(1, min(600, int(retry_after))) if retry_after else 60
+                    retry_seconds = max(1, min(600, int(retry_after))) if retry_after else 120
                 except ValueError:
-                    retry_seconds = 60
+                    retry_seconds = 120
                 self._rate_limited_until = now + timedelta(seconds=retry_seconds)
-                raise RuntimeError(f"Rate limited by upstream (HTTP 429). Retry after {retry_seconds}s")
+                if response.status_code == 509:
+                    raise RuntimeError(f"Bandwidth limit reached upstream (HTTP 509). Retry in {retry_seconds}s")
+                raise RuntimeError(f"Rate limited by upstream (HTTP 429). Retry in {retry_seconds}s")
 
             response.raise_for_status()
             self._rate_limited_until = None

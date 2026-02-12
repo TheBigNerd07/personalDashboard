@@ -284,6 +284,12 @@ body.glance-mode .cards {
   grid-auto-rows: minmax(0, 1fr);
 }
 
+body.glance-mode[data-orientation="vertical"] .cards {
+  grid-template-rows: none;
+  grid-auto-rows: minmax(180px, 1fr);
+  overflow: auto;
+}
+
 body.glance-mode .card {
   grid-column: span 1;
   min-height: 0 !important;
