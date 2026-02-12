@@ -46,17 +46,27 @@ body {
     radial-gradient(1300px 700px at -10% -10%, var(--bg-glow-1), transparent 52%),
     radial-gradient(1400px 800px at 110% -20%, var(--bg-glow-2), transparent 56%),
     linear-gradient(165deg, var(--bg) 0%, var(--bg-alt) 42%, var(--bg-grad-end) 100%);
+  overflow: auto;
+}
+
+body.glance-mode {
   overflow: hidden;
 }
 
 .app-shell {
   width: min(2120px, 100%);
-  height: 100vh;
+  min-height: 100vh;
+  height: auto;
   margin: 0 auto;
   padding: 10px;
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
   gap: 8px;
+}
+
+body.glance-mode .app-shell {
+  height: 100vh;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
 }
 
 .toolbar,
@@ -88,15 +98,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 9px 12px;
+  gap: 10px;
+  padding: 7px 10px;
 }
 
 .title-wrap {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 360px;
+  min-width: 240px;
 }
 
 .eyebrow {
@@ -124,7 +134,8 @@ h1 {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .controls label,
@@ -132,14 +143,14 @@ h1 {
 .settings-section label {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 0.76rem;
+  gap: 5px;
+  font-size: 0.72rem;
   font-weight: 650;
   color: var(--muted);
 }
 
 .controls label {
-  padding: 6px 10px;
+  padding: 4px 7px;
   border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: rgba(9, 23, 42, 0.76);
@@ -154,7 +165,7 @@ textarea {
   background: var(--control-bg);
   border: 1px solid var(--line);
   border-radius: 11px;
-  padding: 7px 10px;
+  padding: 5px 8px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.12s ease;
 }
 
@@ -163,6 +174,8 @@ button {
   font-weight: 650;
   letter-spacing: -0.01em;
   white-space: nowrap;
+  font-size: 0.72rem;
+  line-height: 1.1;
 }
 
 button:hover {
@@ -229,11 +242,26 @@ textarea:focus {
   width: clamp(180px, 26vw, 420px);
 }
 
+.controls #refresh-rate {
+  width: 4.2rem;
+  text-align: center;
+}
+
+.controls select {
+  max-width: 8rem;
+}
+
 .cards {
   margin-top: 0;
   display: grid;
   gap: 8px;
   grid-auto-flow: row dense;
+  min-height: auto;
+  height: auto;
+  align-content: start;
+}
+
+body.glance-mode .cards {
   min-height: 0;
   height: 100%;
   align-content: stretch;
@@ -252,12 +280,14 @@ body[data-orientation="vertical"] .card { grid-column: span 6; }
 
 body.glance-mode .cards {
   grid-template-columns: repeat(var(--glance-columns, 6), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--glance-rows, 4), minmax(0, 1fr));
   grid-auto-rows: minmax(0, 1fr);
 }
 
 body.glance-mode .card {
   grid-column: span 1;
-  min-height: 0;
+  min-height: 0 !important;
+  height: 100%;
 }
 
 body[data-density="comfortable"] .card {
@@ -711,10 +741,21 @@ main {
 
   .toolbar {
     position: static;
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .title-wrap {
     min-width: 0;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   body[data-orientation="horizontal"] .card,

@@ -46,6 +46,14 @@ class RefreshNowRequest(BaseModel):
     source: Optional[str] = None
 
 
+def _safe_poll_interval(raw_value: Any, default: float, minimum: float) -> float:
+    try:
+        value = float(raw_value)
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, value)
+
+
 def build_providers(cfg: Dict[str, Any]) -> List[BaseProvider]:
     providers: List[BaseProvider] = []
     provider_cfg = cfg.get("providers", {})
@@ -87,7 +95,11 @@ def build_providers(cfg: Dict[str, Any]) -> List[BaseProvider]:
                 name=stock_name,
                 symbol=str(stock_cfg.get("symbol", default_symbol)).upper(),
                 enabled=stock_cfg.get("enabled", legacy_market_cfg.get("enabled", True)),
-                poll_interval=float(stock_cfg.get("poll_interval", legacy_market_cfg.get("poll_interval", 2))),
+                poll_interval=_safe_poll_interval(
+                    stock_cfg.get("poll_interval", legacy_market_cfg.get("poll_interval", 2)),
+                    default=2.0,
+                    minimum=30.0,
+                ),
                 cache_ttl=float(stock_cfg.get("cache_ttl", legacy_market_cfg.get("cache_ttl", 2))),
                 timeout_s=float(stock_cfg.get("timeout_s", 6)),
             )
@@ -265,7 +277,7 @@ def build_providers(cfg: Dict[str, Any]) -> List[BaseProvider]:
         MarketIndicesProvider(
             symbols=indices_cfg.get("symbols", ["^GSPC", "^IXIC", "^DJI", "^VIX"]),
             enabled=indices_cfg.get("enabled", True),
-            poll_interval=float(indices_cfg.get("poll_interval", 12)),
+            poll_interval=_safe_poll_interval(indices_cfg.get("poll_interval", 12), default=12.0, minimum=45.0),
             cache_ttl=float(indices_cfg.get("cache_ttl", 6)),
             timeout_s=float(indices_cfg.get("timeout_s", 6)),
         )
@@ -297,7 +309,7 @@ def build_providers(cfg: Dict[str, Any]) -> List[BaseProvider]:
     providers.append(
         QuoteOfDayProvider(
             enabled=quote_cfg.get("enabled", True),
-            poll_interval=float(quote_cfg.get("poll_interval", 120)),
+            poll_interval=_safe_poll_interval(quote_cfg.get("poll_interval", 120), default=120.0, minimum=300.0),
             cache_ttl=float(quote_cfg.get("cache_ttl", 60)),
             timeout_s=float(quote_cfg.get("timeout_s", 6)),
         )
@@ -348,7 +360,7 @@ def build_providers(cfg: Dict[str, Any]) -> List[BaseProvider]:
     providers.append(
         SpaceLaunchesProvider(
             enabled=launches_cfg.get("enabled", True),
-            poll_interval=float(launches_cfg.get("poll_interval", 60)),
+            poll_interval=_safe_poll_interval(launches_cfg.get("poll_interval", 60), default=60.0, minimum=300.0),
             cache_ttl=float(launches_cfg.get("cache_ttl", 30)),
             timeout_s=float(launches_cfg.get("timeout_s", 8)),
             limit=int(launches_cfg.get("limit", 6)),

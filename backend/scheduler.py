@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -116,14 +117,38 @@ class DataScheduler:
             state.history.append(result)
         except Exception as exc:
             previous_data = state.last_result.data if state.last_result else {}
+            is_rate_limited = self._is_rate_limited_error(exc)
+            status = "stale" if is_rate_limited else "error"
             error_result = NormalizedSnapshot(
                 source=state.provider.name,
-                status="error",
+                status=status,
                 data=previous_data,
-                error=str(exc),
+                error=self._compact_error_message(exc),
             )
             state.last_result = error_result
             state.history.append(error_result)
+
+    @staticmethod
+    def _is_rate_limited_error(exc: Exception) -> bool:
+        text = str(exc).lower()
+        return "rate limit" in text or "429" in text
+
+    @staticmethod
+    def _compact_error_message(exc: Exception) -> str:
+        text = str(exc).strip()
+        if not text:
+            return "Request failed"
+
+        lower = text.lower()
+        if "rate limit" in lower or "429" in lower:
+            retry = re.search(r"retry\s+(?:after|in)\s+(\d+)\s*s", lower)
+            if retry:
+                return f"Rate limited. Retry in {retry.group(1)}s"
+            return "Rate limited by upstream (HTTP 429)"
+
+        if len(text) > 220:
+            return f"{text[:217]}..."
+        return text
 
     def get_snapshot(self) -> Dict[str, object]:
         now = datetime.now(timezone.utc)

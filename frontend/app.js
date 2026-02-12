@@ -14,6 +14,8 @@ const settingsModal = document.getElementById("settings-modal");
 const settingsStatus = document.getElementById("settings-status");
 const settingsSearchInput = document.getElementById("settings-search-input");
 const settingsGroupFilter = document.getElementById("settings-group-filter");
+const settingsSelectAllModulesBtn = document.getElementById("settings-select-all-modules");
+const settingsDeselectAllModulesBtn = document.getElementById("settings-deselect-all-modules");
 const settingsExpandAllBtn = document.getElementById("settings-expand-all");
 const settingsCollapseAllBtn = document.getElementById("settings-collapse-all");
 const settingsSubmenuButtons = [...document.querySelectorAll(".settings-submenu-btn")];
@@ -158,6 +160,35 @@ const cfgLaunchesLimit = document.getElementById("cfg-launches-limit");
 const cfgLaunchesPoll = document.getElementById("cfg-launches-poll");
 const cfgLaunchesTtl = document.getElementById("cfg-launches-ttl");
 const cfgLaunchesTimeout = document.getElementById("cfg-launches-timeout");
+
+const MODULE_ENABLED_CHECKBOXES = [
+  cfgWeatherEnabled,
+  cfgSystemEnabled,
+  cfgStock1Enabled,
+  cfgStock2Enabled,
+  cfgStock3Enabled,
+  cfgStatusEnabled,
+  cfgHeartbeatEnabled,
+  cfgSevereEnabled,
+  cfgYoutubeEnabled,
+  cfgTravelEnabled,
+  cfgCryptoEnabled,
+  cfgHnEnabled,
+  cfgEarthEnabled,
+  cfgSunEnabled,
+  cfgAirEnabled,
+  cfgIssEnabled,
+  cfgDnsEnabled,
+  cfgIndicesEnabled,
+  cfgFxEnabled,
+  cfgSpaceEnabled,
+  cfgQuoteEnabled,
+  cfgMempoolEnabled,
+  cfgNasaEnabled,
+  cfgXrayEnabled,
+  cfgCryptoGlobalEnabled,
+  cfgLaunchesEnabled,
+].filter(Boolean);
 
 let paused = false;
 let fetchInterval = null;
@@ -316,15 +347,28 @@ function applyLayoutAndDensity() {
 function applyGlanceColumns(sourceCount) {
   if (!glanceMode) {
     cardsContainer.style.removeProperty("--glance-columns");
+    cardsContainer.style.removeProperty("--glance-rows");
     return;
   }
+
   const orientation = activeOrientation();
-  const targetRows = orientation === "horizontal" ? 4 : 5;
-  const minCols = orientation === "horizontal" ? 4 : 3;
+  const horizontal = orientation === "horizontal";
+  const maxRows = horizontal ? 4 : 5;
   const maxCols = orientation === "horizontal" ? 8 : 6;
-  const calculated = Math.ceil(Math.max(sourceCount, 1) / targetRows);
-  const cols = Math.max(minCols, Math.min(maxCols, calculated));
+  const count = Math.max(1, sourceCount);
+  const aspect = horizontal ? 1.8 : 1.2;
+
+  let cols = Math.ceil(Math.sqrt(count * aspect));
+  cols = Math.max(1, Math.min(maxCols, cols));
+  let rows = Math.ceil(count / cols);
+
+  if (rows > maxRows) {
+    rows = maxRows;
+    cols = Math.min(maxCols, Math.ceil(count / rows));
+  }
+
   cardsContainer.style.setProperty("--glance-columns", `${cols}`);
+  cardsContainer.style.setProperty("--glance-rows", `${rows}`);
 }
 
 function applyTheme(theme = {}) {
@@ -384,6 +428,26 @@ function formatTimestamp(msOrSeconds) {
   if (typeof msOrSeconds !== "number") return "-";
   const millis = msOrSeconds > 10_000_000_000 ? msOrSeconds : msOrSeconds * 1000;
   return new Date(millis).toLocaleString();
+}
+
+function formatDuration(seconds) {
+  if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds < 0) return "-";
+  const totalSeconds = Math.floor(seconds);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+
+  if (days > 0) {
+    return `${days}d ${hours}h ${minutes}m`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${secs}s`;
+  }
+  return `${secs}s`;
 }
 
 function isImperial() {
@@ -895,7 +959,7 @@ function renderHeartbeat(data, history) {
   const heartbeatTrend = uptimes.length > 1 ? sparkline(uptimes) : "-";
   return `
     ${row("State", data.heartbeat ?? "-", true)}
-    ${row("Uptime", typeof data.uptime_seconds === "number" ? `${data.uptime_seconds.toFixed(1)} s` : "-", true)}
+    ${row("Uptime", formatDuration(data.uptime_seconds), true)}
     ${row("UTC", data.utc_now ? new Date(data.utc_now).toLocaleTimeString() : "-", true)}
     ${row("Trend", heartbeatTrend, true)}
   `;
@@ -1553,7 +1617,7 @@ function reorderCardOrder(draggedSource, targetSource) {
 function toggleArrangeMode() {
   arrangeMode = !arrangeMode;
   document.body.classList.toggle("arrange-mode", arrangeMode);
-  toggleArrangeBtn.textContent = arrangeMode ? "Done" : "Arrange";
+  toggleArrangeBtn.textContent = arrangeMode ? "Done" : "Sort";
   if (snapshotCache) render(snapshotCache);
 }
 
@@ -2217,6 +2281,13 @@ function closeSettingsModal() {
   settingsModal.classList.add("hidden");
 }
 
+function setAllModulesEnabled(enabled) {
+  MODULE_ENABLED_CHECKBOXES.forEach((checkbox) => {
+    checkbox.checked = enabled;
+  });
+  setSettingsStatus(enabled ? "All modules selected. Click Save to apply." : "All modules deselected. Click Save to apply.");
+}
+
 async function saveSettings() {
   const parsed = buildConfigFromForm();
 
@@ -2269,6 +2340,8 @@ openSettingsBtn.addEventListener("click", openSettingsModal);
 closeSettingsBtn.addEventListener("click", closeSettingsModal);
 reloadSettingsBtn.addEventListener("click", loadSettingsIntoForm);
 saveSettingsBtn.addEventListener("click", saveSettings);
+settingsSelectAllModulesBtn?.addEventListener("click", () => setAllModulesEnabled(true));
+settingsDeselectAllModulesBtn?.addEventListener("click", () => setAllModulesEnabled(false));
 searchInput.addEventListener("input", () => snapshotCache && render(snapshotCache));
 statusFilter.addEventListener("change", () => snapshotCache && render(snapshotCache));
 categoryFilter?.addEventListener("change", () => snapshotCache && render(snapshotCache));
