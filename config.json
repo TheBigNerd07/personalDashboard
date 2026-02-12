@@ -1,0 +1,307 @@
+{
+  "unit_system": "imperial",
+  "appearance_mode": "light",
+  "theme": {},
+  "global_refresh_rate": 1,
+  "history_size": 20,
+  "providers": {
+    "weather": {
+      "enabled": true,
+      "city": "Post Falls",
+      "latitude": 47.6062,
+      "longitude": -122.3321,
+      "poll_interval": 10,
+      "cache_ttl": 4
+    },
+    "system_metrics": {
+      "enabled": true,
+      "timezones": [
+        "UTC",
+        "America/New_York",
+        "America/Los_Angeles",
+        "Europe/London"
+      ],
+      "poll_interval": 1,
+      "cache_ttl": 1
+    },
+    "stock_1": {
+      "enabled": true,
+      "symbol": "AAPL",
+      "poll_interval": 2,
+      "cache_ttl": 2,
+      "timeout_s": 6
+    },
+    "stock_2": {
+      "enabled": true,
+      "symbol": "MSFT",
+      "poll_interval": 2,
+      "cache_ttl": 2,
+      "timeout_s": 6
+    },
+    "stock_3": {
+      "enabled": true,
+      "symbol": "NVDA",
+      "poll_interval": 2,
+      "cache_ttl": 2,
+      "timeout_s": 6
+    },
+    "public_status": {
+      "enabled": true,
+      "poll_interval": 8,
+      "cache_ttl": 4,
+      "timeout_s": 5,
+      "services": [
+        {
+          "name": "GitHub API",
+          "url": "https://api.github.com",
+          "expect_status": 200
+        },
+        {
+          "name": "Open-Meteo API",
+          "url": "https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0",
+          "expect_status": 200
+        }
+      ]
+    },
+    "heartbeat": {
+      "enabled": true,
+      "poll_interval": 1,
+      "cache_ttl": 1
+    },
+    "usa_severe_weather": {
+      "enabled": false,
+      "poll_interval": 20,
+      "cache_ttl": 8,
+      "timeout_s": 8,
+      "top_n": 8,
+      "cities": [
+        {
+          "city": "Seattle",
+          "state": "WA",
+          "latitude": 47.6062,
+          "longitude": -122.3321
+        },
+        {
+          "city": "San Francisco",
+          "state": "CA",
+          "latitude": 37.7749,
+          "longitude": -122.4194
+        },
+        {
+          "city": "Los Angeles",
+          "state": "CA",
+          "latitude": 34.0522,
+          "longitude": -118.2437
+        },
+        {
+          "city": "Denver",
+          "state": "CO",
+          "latitude": 39.7392,
+          "longitude": -104.9903
+        },
+        {
+          "city": "Dallas",
+          "state": "TX",
+          "latitude": 32.7767,
+          "longitude": -96.797
+        },
+        {
+          "city": "Chicago",
+          "state": "IL",
+          "latitude": 41.8781,
+          "longitude": -87.6298
+        },
+        {
+          "city": "Atlanta",
+          "state": "GA",
+          "latitude": 33.749,
+          "longitude": -84.388
+        },
+        {
+          "city": "Miami",
+          "state": "FL",
+          "latitude": 25.7617,
+          "longitude": -80.1918
+        },
+        {
+          "city": "New York",
+          "state": "NY",
+          "latitude": 40.7128,
+          "longitude": -74.006
+        },
+        {
+          "city": "Boston",
+          "state": "MA",
+          "latitude": 42.3601,
+          "longitude": -71.0589
+        }
+      ]
+    },
+    "youtube_subscriptions": {
+      "enabled": true,
+      "poll_interval": 60,
+      "cache_ttl": 20,
+      "timeout_s": 8,
+      "max_videos": 5,
+      "channel_ids": [
+        "@TheStradman",
+        "@LinusTechTips",
+        "@halfasinteresting",
+        "@Swiss001",
+        "@FlightFormula",
+        "@penguinz0",
+        "@AtriocClips",
+        "@StuffMadeHere",
+        "@smartereveryday"
+      ]
+    },
+    "travel_time": {
+      "enabled": true,
+      "poll_interval": 45,
+      "cache_ttl": 20,
+      "timeout_s": 8,
+      "origin": {
+        "name": "116 S Linden St Post Falls, ID 83854",
+        "address": "116 S Linden St Post Falls, ID 83854"
+      },
+      "destinations": [
+        {
+          "name": "1824 E 16th Ave Post Falls, ID  83854",
+          "address": "1824 E 16th Ave Post Falls, ID  83854"
+        },
+        {
+          "name": "2416 N Old Mill Loop, Coeur d'Alene, ID 83814",
+          "address": "2416 N Old Mill Loop, Coeur d'Alene, ID 83814"
+        },
+        {
+          "name": "2832 E Poleline Ave, Post Falls, ID 83854",
+          "address": "2832 E Poleline Ave, Post Falls, ID 83854"
+        }
+      ]
+    },
+    "crypto_price": {
+      "enabled": true,
+      "symbol": "BTC-USD",
+      "poll_interval": 8,
+      "cache_ttl": 4,
+      "timeout_s": 6
+    },
+    "hn_trends": {
+      "enabled": true,
+      "top_n": 8,
+      "poll_interval": 45,
+      "cache_ttl": 20,
+      "timeout_s": 8
+    },
+    "earthquakes": {
+      "enabled": true,
+      "max_events": 6,
+      "poll_interval": 30,
+      "cache_ttl": 12,
+      "timeout_s": 7
+    },
+    "sun_times": {
+      "enabled": true,
+      "latitude": 47.6588,
+      "longitude": -117.426,
+      "poll_interval": 90,
+      "cache_ttl": 60,
+      "timeout_s": 6
+    },
+    "air_quality": {
+      "enabled": true,
+      "latitude": 47.6588,
+      "longitude": -117.426,
+      "poll_interval": 25,
+      "cache_ttl": 10,
+      "timeout_s": 8
+    },
+    "iss_position": {
+      "enabled": true,
+      "poll_interval": 5,
+      "cache_ttl": 3,
+      "timeout_s": 5
+    },
+    "network_dns": {
+      "enabled": true,
+      "hosts": [
+        "api.github.com",
+        "query1.finance.yahoo.com",
+        "api.open-meteo.com"
+      ],
+      "poll_interval": 35,
+      "cache_ttl": 15
+    },
+    "market_indices": {
+      "enabled": true,
+      "symbols": [
+        "^GSPC",
+        "^IXIC",
+        "^DJI",
+        "^VIX"
+      ],
+      "poll_interval": 12,
+      "cache_ttl": 6,
+      "timeout_s": 6
+    },
+    "fx_rates": {
+      "enabled": true,
+      "base_currency": "USD",
+      "symbols": [
+        "EUR",
+        "GBP",
+        "JPY",
+        "CAD",
+        "AUD"
+      ],
+      "poll_interval": 30,
+      "cache_ttl": 15,
+      "timeout_s": 6
+    },
+    "space_weather": {
+      "enabled": true,
+      "poll_interval": 20,
+      "cache_ttl": 10,
+      "timeout_s": 6
+    },
+    "quote_of_day": {
+      "enabled": true,
+      "poll_interval": 120,
+      "cache_ttl": 60,
+      "timeout_s": 6
+    },
+    "mempool_fees": {
+      "enabled": true,
+      "poll_interval": 15,
+      "cache_ttl": 8,
+      "timeout_s": 6
+    },
+    "nasa_events": {
+      "enabled": true,
+      "poll_interval": 40,
+      "cache_ttl": 20,
+      "timeout_s": 8,
+      "limit": 8
+    },
+    "solar_xray": {
+      "enabled": true,
+      "poll_interval": 25,
+      "cache_ttl": 10,
+      "timeout_s": 8
+    },
+    "crypto_global": {
+      "enabled": true,
+      "poll_interval": 20,
+      "cache_ttl": 10,
+      "timeout_s": 8
+    },
+    "space_launches": {
+      "enabled": true,
+      "poll_interval": 60,
+      "cache_ttl": 30,
+      "timeout_s": 8,
+      "limit": 6
+    }
+  },
+  "brand_palette": "fleet"
+}

@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mission Control Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="toolbar">
+        <div class="title-wrap">
+          <span class="eyebrow">Mission Control</span>
+          <h1>Personal Dispatch Console</h1>
+          <p class="subtitle">High-density telemetry for weather, finance, aviation, space, and tech.</p>
+        </div>
+        <div class="controls">
+          <label>
+            Refresh
+            <input id="refresh-rate" type="number" min="0.1" step="0.1" value="1" />
+          </label>
+          <button id="set-rate">Apply</button>
+          <button id="refresh-now">Refresh Now</button>
+          <button id="toggle-pause">Pause</button>
+          <button id="toggle-arrange">Arrange</button>
+          <label>
+            Layout
+            <select id="layout-mode">
+              <option value="auto">Auto</option>
+              <option value="horizontal">Horizontal</option>
+              <option value="vertical">Vertical</option>
+            </select>
+          </label>
+          <label>
+            Density
+            <select id="density-mode">
+              <option value="comfortable">Comfort</option>
+              <option value="dense">Dense</option>
+              <option value="max">Max</option>
+            </select>
+          </label>
+          <label>
+            Brand
+            <select id="brand-palette">
+              <option value="fleet">Fleet Blend</option>
+              <option value="boeing">Boeing</option>
+              <option value="alaska">Alaska Airlines</option>
+              <option value="jetblue">jetBlue</option>
+              <option value="blueorigin">Blue Origin</option>
+            </select>
+          </label>
+          <button id="wallboard-toggle">Wallboard</button>
+          <button id="export-json">Export</button>
+          <button id="open-settings">Settings</button>
+        </div>
+      </header>
+
+      <section class="summary" id="summary"></section>
+
+      <section class="filters">
+        <label>
+          Search
+          <input id="search-input" type="text" placeholder="source name..." />
+        </label>
+        <label>
+          Status
+          <select id="status-filter">
+            <option value="all">All</option>
+            <option value="ok">OK</option>
+            <option value="stale">Stale</option>
+            <option value="error">Error</option>
+          </select>
+        </label>
+        <label>
+          Category
+          <select id="category-filter">
+            <option value="all">All</option>
+            <option value="finance">Finance</option>
+            <option value="weather">Weather</option>
+            <option value="aviation">Aviation</option>
+            <option value="space">Space</option>
+            <option value="tech">Tech</option>
+            <option value="ops">Operations</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+      </section>
+
+      <main>
+        <section id="cards" class="cards"></section>
+      </main>
+    </div>
+
+    <template id="card-template">
+      <article class="card">
+        <div class="card-head">
+          <h2 class="source"></h2>
+          <span class="status-badge"></span>
+        </div>
+        <div class="card-actions">
+          <button class="source-refresh">Refresh</button>
+          <button class="source-toggle"></button>
+        </div>
+        <div class="payload"></div>
+        <div class="meta">
+          <span class="timestamp"></span>
+          <span class="samples"></span>
+          <span class="error"></span>
+        </div>
+      </article>
+    </template>
+
+    <div id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal-panel">
+        <div class="modal-head">
+          <h3 id="settings-title">Settings</h3>
+          <button id="close-settings" class="modal-close">Close</button>
+        </div>
+        <p class="modal-subtitle">Configure all parameters using fields below. Saving applies immediately and persists to disk.</p>
+        <div class="settings-submenu" aria-label="Settings Categories">
+          <button class="settings-submenu-btn is-active" type="button" data-group="all">All</button>
+          <button class="settings-submenu-btn" type="button" data-group="global">Global</button>
+          <button class="settings-submenu-btn" type="button" data-group="modules">Module Settings</button>
+          <button class="settings-submenu-btn" type="button" data-group="stocks">Stocks</button>
+          <button class="settings-submenu-btn" type="button" data-group="monitoring">Monitoring</button>
+          <button class="settings-submenu-btn" type="button" data-group="integrations">Integrations</button>
+        </div>
+        <div class="settings-tools">
+          <input id="settings-search-input" type="text" placeholder="Search settings..." />
+          <select id="settings-group-filter">
+            <option value="all">All Sections</option>
+            <option value="global">Global</option>
+            <option value="modules">Module Settings</option>
+            <option value="stocks">Stocks</option>
+            <option value="monitoring">Monitoring</option>
+            <option value="integrations">Integrations</option>
+          </select>
+          <button id="settings-expand-all">Expand All</button>
+          <button id="settings-collapse-all">Collapse All</button>
+        </div>
+        <div class="settings-grid">
+          <section class="settings-section">
+            <h4>Global</h4>
+            <label>Unit System
+              <select id="cfg-unit-system">
+                <option value="imperial">Imperial (F, mph, miles)</option>
+                <option value="metric">Metric (C, km/h, km)</option>
+              </select>
+            </label>
+            <label>Brand Palette
+              <select id="cfg-brand-palette">
+                <option value="fleet">Fleet Blend</option>
+                <option value="boeing">Boeing</option>
+                <option value="alaska">Alaska Airlines</option>
+                <option value="jetblue">jetBlue</option>
+                <option value="blueorigin">Blue Origin</option>
+              </select>
+            </label>
+            <label>Global Refresh Rate <input id="cfg-global-refresh-rate" type="number" min="0.1" step="0.1" /></label>
+            <label>History Size <input id="cfg-history-size" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Weather</h4>
+            <label class="toggle-row"><input id="cfg-weather-enabled" type="checkbox" /> Enabled</label>
+            <label>City <input id="cfg-weather-city" type="text" /></label>
+            <label>Latitude <input id="cfg-weather-latitude" type="number" step="0.0001" /></label>
+            <label>Longitude <input id="cfg-weather-longitude" type="number" step="0.0001" /></label>
+            <label>Poll Interval (s) <input id="cfg-weather-poll" type="number" min="0.1" step="0.1" /></label>
+            <label>Cache TTL (s) <input id="cfg-weather-ttl" type="number" min="0.1" step="0.1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>System Metrics</h4>
+            <label class="toggle-row"><input id="cfg-system-enabled" type="checkbox" /> Enabled</label>
+            <label>Timezones (comma-separated) <input id="cfg-system-timezones" type="text" /></label>
+            <label>Poll Interval (s) <input id="cfg-system-poll" type="number" min="0.1" step="0.1" /></label>
+            <label>Cache TTL (s) <input id="cfg-system-ttl" type="number" min="0.1" step="0.1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Stock Module 1</h4>
+            <label class="toggle-row"><input id="cfg-stock1-enabled" type="checkbox" /> Enabled</label>
+            <label>Stock Symbol <input id="cfg-stock1-symbol" type="text" /></label>
+            <label>Poll Interval (s) <input id="cfg-stock1-poll" type="number" min="0.1" step="0.1" /></label>
+            <label>Cache TTL (s) <input id="cfg-stock1-ttl" type="number" min="0.1" step="0.1" /></label>
+            <label>Timeout (s) <input id="cfg-stock1-timeout" type="number" min="1" step="0.5" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Stock Module 2</h4>
+            <label class="toggle-row"><input id="cfg-stock2-enabled" type="checkbox" /> Enabled</label>
+            <label>Stock Symbol <input id="cfg-stock2-symbol" type="text" /></label>
+            <label>Poll Interval (s) <input id="cfg-stock2-poll" type="number" min="0.1" step="0.1" /></label>
+            <label>Cache TTL (s) <input id="cfg-stock2-ttl" type="number" min="0.1" step="0.1" /></label>
+            <label>Timeout (s) <input id="cfg-stock2-timeout" type="number" min="1" step="0.5" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Stock Module 3</h4>
+            <label class="toggle-row"><input id="cfg-stock3-enabled" type="checkbox" /> Enabled</label>
+            <label>Stock Symbol <input id="cfg-stock3-symbol" type="text" /></label>
+            <label>Poll Interval (s) <input id="cfg-stock3-poll" type="number" min="0.1" step="0.1" /></label>
+            <label>Cache TTL (s) <input id="cfg-stock3-ttl" type="number" min="0.1" step="0.1" /></label>
+            <label>Timeout (s) <input id="cfg-stock3-timeout" type="number" min="1" step="0.5" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Public Status</h4>
+            <label class="toggle-row"><input id="cfg-status-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-status-poll" type="number" min="0.1" step="0.1" /></label>
+            <label>Cache TTL (s) <input id="cfg-status-ttl" type="number" min="0.1" step="0.1" /></label>
+            <label>Timeout (s) <input id="cfg-status-timeout" type="number" min="0.1" step="0.1" /></label>
+            <label>Services (`name|url|status`, one per line)
+              <textarea id="cfg-status-services" rows="5"></textarea>
+            </label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Heartbeat</h4>
+            <label class="toggle-row"><input id="cfg-heartbeat-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-heartbeat-poll" type="number" min="0.1" step="0.1" /></label>
+            <label>Cache TTL (s) <input id="cfg-heartbeat-ttl" type="number" min="0.1" step="0.1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>USA Severe Weather</h4>
+            <label class="toggle-row"><input id="cfg-severe-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-severe-poll" type="number" min="0.1" step="0.1" /></label>
+            <label>Cache TTL (s) <input id="cfg-severe-ttl" type="number" min="0.1" step="0.1" /></label>
+            <label>Timeout (s) <input id="cfg-severe-timeout" type="number" min="0.1" step="0.1" /></label>
+            <label>Top N <input id="cfg-severe-topn" type="number" min="1" step="1" /></label>
+            <label>Cities (`city,state,lat,lon`, one per line)
+              <textarea id="cfg-severe-cities" rows="6"></textarea>
+            </label>
+          </section>
+
+          <section class="settings-section">
+            <h4>YouTube Subscriptions</h4>
+            <label class="toggle-row"><input id="cfg-youtube-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-youtube-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-youtube-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-youtube-timeout" type="number" min="1" step="1" /></label>
+            <label>Max Videos <input id="cfg-youtube-max" type="number" min="1" step="1" /></label>
+            <label>Channels (ID, @handle, or channel URL; one per line)
+              <textarea id="cfg-youtube-channels" rows="6" placeholder="UC...\n@mychannel\nhttps://www.youtube.com/@mychannel"></textarea>
+            </label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Travel Time</h4>
+            <label class="toggle-row"><input id="cfg-travel-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-travel-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-travel-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-travel-timeout" type="number" min="1" step="1" /></label>
+            <label>Origin Address
+              <input id="cfg-travel-origin" type="text" placeholder="123 Main St, City, ST" />
+            </label>
+            <label>Destination Addresses (one per line)
+              <textarea id="cfg-travel-dests" rows="6"></textarea>
+            </label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Crypto Price</h4>
+            <label class="toggle-row"><input id="cfg-crypto-enabled" type="checkbox" /> Enabled</label>
+            <label>Symbol (e.g. BTC-USD) <input id="cfg-crypto-symbol" type="text" /></label>
+            <label>Poll Interval (s) <input id="cfg-crypto-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-crypto-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-crypto-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Hacker News Trends</h4>
+            <label class="toggle-row"><input id="cfg-hn-enabled" type="checkbox" /> Enabled</label>
+            <label>Top Stories <input id="cfg-hn-topn" type="number" min="1" step="1" /></label>
+            <label>Poll Interval (s) <input id="cfg-hn-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-hn-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-hn-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Earthquakes</h4>
+            <label class="toggle-row"><input id="cfg-earth-enabled" type="checkbox" /> Enabled</label>
+            <label>Max Events <input id="cfg-earth-max" type="number" min="1" step="1" /></label>
+            <label>Poll Interval (s) <input id="cfg-earth-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-earth-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-earth-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Sun Times</h4>
+            <label class="toggle-row"><input id="cfg-sun-enabled" type="checkbox" /> Enabled</label>
+            <label>Latitude <input id="cfg-sun-latitude" type="number" step="0.0001" /></label>
+            <label>Longitude <input id="cfg-sun-longitude" type="number" step="0.0001" /></label>
+            <label>Poll Interval (s) <input id="cfg-sun-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-sun-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-sun-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Air Quality</h4>
+            <label class="toggle-row"><input id="cfg-air-enabled" type="checkbox" /> Enabled</label>
+            <label>Latitude <input id="cfg-air-latitude" type="number" step="0.0001" /></label>
+            <label>Longitude <input id="cfg-air-longitude" type="number" step="0.0001" /></label>
+            <label>Poll Interval (s) <input id="cfg-air-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-air-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-air-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>ISS Position</h4>
+            <label class="toggle-row"><input id="cfg-iss-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-iss-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-iss-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-iss-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Network DNS</h4>
+            <label class="toggle-row"><input id="cfg-dns-enabled" type="checkbox" /> Enabled</label>
+            <label>Hosts (comma-separated) <input id="cfg-dns-hosts" type="text" /></label>
+            <label>Poll Interval (s) <input id="cfg-dns-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-dns-ttl" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Market Indices</h4>
+            <label class="toggle-row"><input id="cfg-indices-enabled" type="checkbox" /> Enabled</label>
+            <label>Symbols (comma-separated) <input id="cfg-indices-symbols" type="text" /></label>
+            <label>Poll Interval (s) <input id="cfg-indices-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-indices-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-indices-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>FX Rates</h4>
+            <label class="toggle-row"><input id="cfg-fx-enabled" type="checkbox" /> Enabled</label>
+            <label>Base Currency <input id="cfg-fx-base" type="text" /></label>
+            <label>Symbols (comma-separated) <input id="cfg-fx-symbols" type="text" /></label>
+            <label>Poll Interval (s) <input id="cfg-fx-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-fx-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-fx-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Space Weather</h4>
+            <label class="toggle-row"><input id="cfg-space-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-space-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-space-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-space-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Quote Of Day</h4>
+            <label class="toggle-row"><input id="cfg-quote-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-quote-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-quote-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-quote-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Mempool Fees</h4>
+            <label class="toggle-row"><input id="cfg-mempool-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-mempool-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-mempool-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-mempool-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>NASA Events</h4>
+            <label class="toggle-row"><input id="cfg-nasa-enabled" type="checkbox" /> Enabled</label>
+            <label>Limit <input id="cfg-nasa-limit" type="number" min="1" step="1" /></label>
+            <label>Poll Interval (s) <input id="cfg-nasa-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-nasa-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-nasa-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Solar Xray</h4>
+            <label class="toggle-row"><input id="cfg-xray-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-xray-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-xray-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-xray-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Crypto Global</h4>
+            <label class="toggle-row"><input id="cfg-crypto-global-enabled" type="checkbox" /> Enabled</label>
+            <label>Poll Interval (s) <input id="cfg-crypto-global-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-crypto-global-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-crypto-global-timeout" type="number" min="1" step="1" /></label>
+          </section>
+
+          <section class="settings-section">
+            <h4>Space Launches</h4>
+            <label class="toggle-row"><input id="cfg-launches-enabled" type="checkbox" /> Enabled</label>
+            <label>Upcoming Launches Limit <input id="cfg-launches-limit" type="number" min="1" step="1" /></label>
+            <label>Poll Interval (s) <input id="cfg-launches-poll" type="number" min="1" step="1" /></label>
+            <label>Cache TTL (s) <input id="cfg-launches-ttl" type="number" min="1" step="1" /></label>
+            <label>Timeout (s) <input id="cfg-launches-timeout" type="number" min="1" step="1" /></label>
+          </section>
+        </div>
+        <div class="modal-actions">
+          <span id="settings-status" class="settings-status"></span>
+          <button id="reload-settings">Reload</button>
+          <button id="save-settings">Save & Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
