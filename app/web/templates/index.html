@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <section class="dashboard-grid">
+    <section id="focus" class="panel span-2">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Today</p>
+          <h2>Focus Panel</h2>
+        </div>
+      </div>
+      <form action="/focus" method="post" class="focus-form">
+        <label>
+          Today's focus
+          <textarea name="todays_focus" rows="3">{{ today_focus }}</textarea>
+        </label>
+        <button class="button primary" type="submit">Save Focus</button>
+      </form>
+      <div class="focus-columns">
+        <div>
+          <h3>Top 3 Priority Tasks</h3>
+          <ul class="compact-list">
+            {% for task in top_tasks %}
+              <li><span class="badge priority-{{ task.priority }}">{{ task.priority }}</span> {{ task.title }}</li>
+            {% else %}
+              <li>No active tasks yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div>
+          <h3>Upcoming Deadlines</h3>
+          <ul class="compact-list">
+            {% for task in upcoming_deadlines %}
+              <li>{{ task.due_date }} · {{ task.title }}</li>
+            {% else %}
+              <li>No deadlines in the next 14 days.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    {% include "partials/briefing.html" %}
+    {% include "partials/weather.html" %}
+    {% include "partials/tasks.html" %}
+    {% include "partials/projects.html" %}
+    {% include "partials/services.html" %}
+    {% include "partials/notes.html" %}
+  </section>
+{% endblock %}
+

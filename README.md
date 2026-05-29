@@ -1,206 +1,234 @@
-# Real-Time Data Monitor
+# Command Center
 
-A lightweight operations-style dashboard that polls multiple live data sources, normalizes them into a consistent schema, and displays their status in near real time.
+Command Center is a Docker-first personal productivity dashboard for Logan. It runs as a lightweight FastAPI app with SQLite storage and server-rendered pages, so it is practical for a Raspberry Pi, Tailscale, and a small homelab.
 
-## Stack
+## Features
 
-- Backend: Python 3.9+, FastAPI, asyncio
-- Frontend: Vanilla HTML/CSS/JS
-- Tests: pytest
+- Today / Focus panel with editable daily focus, top tasks, and upcoming deadlines
+- Task, project, quick note, and homelab service management
+- Optional service health checks that fail safely when a service is unreachable
+- Optional Post Falls, Idaho weather via Open-Meteo
+- Daily briefing with deterministic fallback logic
+- Optional LM Studio integration through an OpenAI-compatible local API
+- Optional password protection with signed session cookies
+- REST API for tasks, projects, notes, services, settings, health, and briefing regeneration
 
-## Implemented Data Sources
+## Screenshots
 
-- `weather`: live current conditions from Open-Meteo (city by lat/lon)
-- `system_metrics`: UTC/local + multiple timezone clocks
-- `stock_1`, `stock_2`, `stock_3`: independent configurable live stock modules (Yahoo Finance quote feed) with chart history and rate-limit handling
-- `public_status`: live checks against configured public service endpoints
-- `heartbeat`: local runtime heartbeat and uptime signal
-- `usa_severe_weather`: ranks worst current weather across configured U.S. cities
-- `youtube_subscriptions`: latest videos from configured YouTube channel IDs
-- `travel_time`: driving ETA from one origin to multiple destinations
-- `crypto_price`: live Coinbase spot crypto ticker
-- `hn_trends`: Hacker News top story monitor
-- `earthquakes`: USGS earthquake feed (last hour)
-- `sun_times`: sunrise/sunset/day-length tracker
-- `air_quality`: Open-Meteo AQI and particulates
-- `iss_position`: live ISS latitude/longitude
-- `network_dns`: DNS health checks for key hosts
-- `market_indices`: live S&P/Nasdaq/Dow/VIX index monitor
-- `fx_rates`: live FX rates for configured base currency
-- `space_weather`: NOAA planetary K-index status
-- `quote_of_day`: daily quote stream
-- `mempool_fees`: live Bitcoin mempool fee recommendations
-- `nasa_events`: open natural event feed from NASA EONET
-- `solar_xray`: NOAA GOES solar X-ray flux monitor
-- `crypto_global`: global crypto market cap and dominance metrics
-- `space_launches`: upcoming launch schedule from The Space Devs
+Add screenshots here after the first deployment.
 
-Each provider runs independently with its own polling interval, cache TTL, and failure handling.
-
-## Project Structure
-
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/backend/providers/weather_provider.py`
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/backend/providers/system_metrics_provider.py`
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/backend/providers/mock_market_provider.py`
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/backend/providers/real_stock_provider.py`
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/backend/scheduler.py`
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/backend/api.py`
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/frontend/index.html`
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/frontend/styles.css`
-- `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/frontend/app.js`
-
-## Normalized Internal Format
-
-Each provider emits:
-
-```json
-{
-  "source": "weather",
-  "status": "ok|stale|error",
-  "data": {},
-  "fetched_at": "ISO8601",
-  "error": null
-}
-```
-
-Scheduler snapshot includes:
-
-```json
-{
-  "paused": false,
-  "global_refresh_rate": 1.0,
-  "generated_at": "ISO8601",
-  "source_count": 3,
-  "sources": [
-    {
-      "source": "weather",
-      "status": "ok",
-      "source_paused": false,
-      "data": {},
-      "fetched_at": "ISO8601",
-      "error": null,
-      "poll_interval": 10,
-      "history": []
-    }
-  ]
-}
-```
-
-## Configuration
-
-Edit `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/config.json`:
-
-```json
-{
-  "appearance_mode": "light",
-  "theme": {
-    "bg": "#F2F2F7",
-    "accent": "#0A84FF",
-    "error": "#D72D20"
-  },
-  "global_refresh_rate": 1.0,
-  "history_size": 20,
-  "providers": {
-    "weather": { "enabled": true, "poll_interval": 10, "cache_ttl": 4 },
-    "system_metrics": { "enabled": true, "poll_interval": 1, "cache_ttl": 1 },
-    "stock_1": { "enabled": true, "symbol": "AAPL", "poll_interval": 2, "cache_ttl": 2, "timeout_s": 6 },
-    "stock_2": { "enabled": true, "symbol": "MSFT", "poll_interval": 2, "cache_ttl": 2, "timeout_s": 6 },
-    "stock_3": { "enabled": true, "symbol": "NVDA", "poll_interval": 2, "cache_ttl": 2, "timeout_s": 6 }
-  }
-}
-```
-
-Set `unit_system` to `imperial` or `metric` to control UI units (temperature, wind, and travel distance).
-Set `appearance_mode` to `light` or `dark` (or use the toolbar toggle).
-Set `theme` hex values in Settings to live-customize dashboard colors.
-
-For `youtube_subscriptions`, add one channel per line in Settings (channel ID, `@handle`, or channel URL), or set them in `config.json` under `providers.youtube_subscriptions.channel_ids`. This app currently uses public RSS feeds and does not authenticate directly to your Google account.
-
-`travel_time` uses free address geocoding via OpenStreetMap Nominatim plus free OSRM routing (`router.project-osrm.org`) for driving ETA estimates. You can enter addresses directly in Settings.
-
-## Run Locally
-
-1. Create and activate a virtualenv.
-2. Install dependencies:
+## Local Development
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8080
 ```
 
-3. Start app:
+Open [http://localhost:8080](http://localhost:8080).
+
+The local default database path is `./data/command_center.db`. Tables are created automatically on startup. Seed data is added only when the database is empty.
+
+## Docker Compose
 
 ```bash
-uvicorn backend.api:app --reload
+cp .env.example .env
+docker compose up -d --build
 ```
 
-4. Open [http://127.0.0.1:8000](http://127.0.0.1:8000)
+Open [http://localhost:8080](http://localhost:8080).
 
-## Dashboard Features
+The compose file persists data with:
 
-- Single-page card-based layout
-- Current values + timestamps + status indicator
-- Auto-refresh without full reload
-- Global refresh-rate control
-- Global pause/resume
-- Per-source pause/resume
-- Manual refresh-now (all sources or per source)
-- Search + status filter (`all/ok/stale/error`)
-- Health summary bar (counts by status)
-- Snapshot export to JSON
-- Settings menu with full JSON config editor
-- Settings persist to `config.json` and apply live without restarting the app
-- In-memory history per source with compact trend hints
-- USA severe weather ranking card (worst locations + national severity level)
-- Mixed card sizing: full and half-width modules (two half modules fit one full slot)
-- Wallboard mode
-- Light/Dark mode toggle
-- Per-source error messages
+```yaml
+./data:/app/data
+```
 
-## API Endpoints
+It also includes:
 
+```yaml
+extra_hosts:
+  - "host.docker.internal:host-gateway"
+```
+
+That is useful only when LM Studio runs on the Docker host. Logan's recommended setup is to use the PC's LAN IP, Tailscale IP, or MagicDNS hostname instead.
+
+## Raspberry Pi Deployment
+
+1. Install Debian or Raspberry Pi OS Lite.
+2. Install Docker and Docker Compose.
+3. Clone this repository onto the Pi.
+4. Copy `.env.example` to `.env`.
+5. Set `SECRET_KEY` to a long random value.
+6. Run `docker compose up -d --build`.
+7. Back up the `./data` directory regularly.
+
+The app uses Python, FastAPI, SQLite, and plain server-rendered HTML. It does not require Kubernetes, a Node build pipeline, cloud services, or paid APIs.
+
+## Nginx Proxy Manager
+
+1. Create a new proxy host.
+2. Set the forward hostname/IP to the Command Center host.
+3. Set the forward port to `8080`.
+4. Enable Websockets if you use them later.
+5. Request an SSL certificate if exposing through a trusted domain.
+6. Prefer Tailscale-only access unless you intentionally expose it publicly.
+
+## Cloudflare Tunnel
+
+At a high level:
+
+1. Install `cloudflared` on the host or run it as a container.
+2. Create a tunnel in Cloudflare Zero Trust.
+3. Point a public hostname to `http://command-center:8080` or `http://<host-ip>:8080`.
+4. Add Cloudflare Access or keep Command Center's `APP_PASSWORD` enabled if the dashboard is reachable outside your private network.
+
+## Optional Password Protection
+
+Authentication is disabled when `APP_PASSWORD` is empty:
+
+```env
+APP_PASSWORD=
+```
+
+To enable it:
+
+```env
+APP_PASSWORD=choose-a-password
+SECRET_KEY=replace-with-a-long-random-string
+```
+
+Restart the container after changing `.env`.
+
+## LM Studio Setup
+
+LM Studio is optional. Command Center works normally when Logan's PC is off, asleep, or unreachable. If the local AI call fails, the dashboard logs a warning, shows a small notice, and uses the deterministic basic briefing.
+
+Recommended remote setup:
+
+1. On the PC running LM Studio:
+   - Open LM Studio.
+   - Download a small chat or instruct model.
+   - Start the Local Server.
+   - Enable access from other devices on the LAN if LM Studio provides that setting.
+   - Confirm the server listens on port `1234`.
+   - Check that the PC firewall allows inbound connections to port `1234` from the Raspberry Pi or Tailscale network.
+2. On the Command Center host, set:
+
+```env
+LLM_ENABLED=true
+LLM_BASE_URL=http://<PC_IP_OR_TAILSCALE_IP>:1234/v1
+LLM_MODEL=<model name shown in LM Studio>
+LLM_TIMEOUT_SECONDS=8
+```
+
+3. Test from the Command Center host:
+
+```bash
+curl http://<PC_IP_OR_TAILSCALE_IP>:1234/v1/models
+```
+
+4. If running Command Center outside Docker on the same machine as LM Studio, use:
+
+```env
+LLM_BASE_URL=http://localhost:1234/v1
+```
+
+5. If LM Studio runs on the Docker host, this can work:
+
+```env
+LLM_BASE_URL=http://host.docker.internal:1234/v1
+```
+
+For Logan's setup, prefer the PC's Tailscale IP, LAN IP, or MagicDNS hostname:
+
+```env
+LLM_BASE_URL=http://100.x.y.z:1234/v1
+LLM_BASE_URL=http://192.168.1.50:1234/v1
+LLM_BASE_URL=http://logan-pc.tailnet-name.ts.net:1234/v1
+```
+
+If the curl test fails:
+
+- Make sure the LM Studio server is running.
+- Make sure the PC is awake.
+- Check firewall rules.
+- Try the Tailscale IP instead of the LAN IP.
+- Confirm both machines are on the same network or Tailnet.
+
+Expected behavior:
+
+- If `LLM_ENABLED=false`, Command Center never calls LM Studio.
+- If the PC is off, Command Center still works.
+- AI briefing falls back to basic mode.
+- No dashboard features should break.
+
+## Weather
+
+Weather is optional and uses Open-Meteo. Defaults are set for Post Falls, Idaho:
+
+```env
+WEATHER_ENABLED=true
+WEATHER_LATITUDE=47.712
+WEATHER_LONGITUDE=-116.948
+WEATHER_TIMEZONE=America/Los_Angeles
+```
+
+If Open-Meteo is unavailable, the weather card displays an unavailable message and the rest of the dashboard continues to load.
+
+## API
+
+- `GET /health`
+- `GET /`
+- `GET /briefing`
+- `POST /briefing/regenerate`
+- `GET /api/tasks`
+- `POST /api/tasks`
+- `GET /api/tasks/{id}`
+- `PATCH /api/tasks/{id}`
+- `DELETE /api/tasks/{id}`
+- `POST /api/tasks/{id}/complete`
+- `GET /api/projects`
+- `POST /api/projects`
+- `PATCH /api/projects/{id}`
+- `DELETE /api/projects/{id}`
+- `GET /api/notes`
+- `POST /api/notes`
+- `PATCH /api/notes/{id}`
+- `DELETE /api/notes/{id}`
+- `GET /api/services`
+- `POST /api/services`
+- `PATCH /api/services/{id}`
+- `DELETE /api/services/{id}`
+- `POST /api/services/check`
 - `GET /api/settings`
-- `POST /api/settings`
-- `GET /api/snapshot`
-- `POST /api/pause`
-- `POST /api/resume`
-- `POST /api/refresh-rate`
-- `POST /api/refresh-now`
-- `POST /api/source/{source}/pause`
-- `POST /api/source/{source}/resume`
+- `PATCH /api/settings`
 
-## Testing
-
-Run:
+## Tests
 
 ```bash
-pytest -q
+pytest
 ```
 
-Covered:
+The tests do not require LM Studio, internet access, Discord, or paid external APIs.
 
-- config save/load roundtrip
-- provider normalization logic
-- mocked weather external API fetch
-- mocked public status external fetch
-- mocked YouTube feed fetch
-- scheduler polling behavior
-- scheduler pause/resume behavior
-- source-level controls + manual refresh + history
+## Backups
 
-## Add a New Provider
+The SQLite database lives in `./data`. To back it up:
 
-1. Create a provider class in `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/backend/providers/` implementing `BaseProvider`:
-   - `async fetch(self) -> dict`
-   - `normalize(self, raw: dict) -> dict`
-2. Register it in `build_providers()` in `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/backend/api.py`.
-3. Add config options under `providers.<name>` in `/Users/bignerd/Library/Mobile Documents/com~apple~CloudDocs/Coding Projects/personalDashboard/config.json`.
-4. Add tests for normalization and failure cases.
+```bash
+mkdir -p backups
+cp data/command_center.db backups/command_center-$(date +%Y%m%d-%H%M%S).db
+```
 
-## Reliability Notes
+For a running container, you can stop briefly before copying:
 
-- Provider failures do not crash scheduler loops.
-- Each provider runs in its own async task.
-- Stale status is computed from cache TTL.
-- Stock modules handle upstream HTTP 429 rate limits with retry-after cooldown windows.
-- Scheduler supports global and source-level controls at runtime.
-- Per-source history is bounded in-memory (`history_size`) to avoid unbounded growth.
+```bash
+docker compose stop command-center
+cp data/command_center.db backups/
+docker compose up -d
+```
+
+Do not delete `./data` unless you intentionally want to reset the dashboard.
+

@@ -1,0 +1,76 @@
+<section id="tasks" class="panel span-2">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">Execution</p>
+      <h2>Tasks</h2>
+    </div>
+    <form action="/" method="get" class="filter-form">
+      <select name="status" aria-label="Filter by status">
+        <option value="">All open</option>
+        {% for status in task_statuses %}
+          <option value="{{ status }}" {% if selected_status == status %}selected{% endif %}>{{ status }}</option>
+        {% endfor %}
+      </select>
+      <select name="category" aria-label="Filter by category">
+        <option value="">All categories</option>
+        {% for category in task_categories %}
+          <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+        {% endfor %}
+      </select>
+      <button class="button secondary" type="submit">Filter</button>
+    </form>
+  </div>
+
+  <form action="/tasks" method="post" class="inline-form add-form">
+    <input name="title" placeholder="Add task" required>
+    <select name="category">
+      {% for category in task_categories %}
+        <option value="{{ category }}" {% if category == "unknown" %}selected{% endif %}>{{ category }}</option>
+      {% endfor %}
+    </select>
+    <select name="priority">
+      {% for priority in task_priorities %}
+        <option value="{{ priority }}" {% if priority == "normal" %}selected{% endif %}>{{ priority }}</option>
+      {% endfor %}
+    </select>
+    <input type="date" name="due_date" aria-label="Due date">
+    <button class="button primary" type="submit">Add</button>
+  </form>
+
+  <div class="item-list">
+    {% for task in tasks %}
+      <article class="item">
+        <form action="/tasks/{{ task.id }}/update" method="post" class="edit-grid">
+          <input name="title" value="{{ task.title }}" aria-label="Task title" required>
+          <select name="priority" aria-label="Priority">
+            {% for priority in task_priorities %}
+              <option value="{{ priority }}" {% if task.priority == priority %}selected{% endif %}>{{ priority }}</option>
+            {% endfor %}
+          </select>
+          <select name="category" aria-label="Category">
+            {% for category in task_categories %}
+              <option value="{{ category }}" {% if task.category == category %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+          </select>
+          <select name="status" aria-label="Status">
+            {% for status in task_statuses %}
+              <option value="{{ status }}" {% if task.status == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+          <input type="date" name="due_date" value="{{ task.due_date or '' }}" aria-label="Due date">
+          <textarea name="description" rows="2" placeholder="Description">{{ task.description }}</textarea>
+          <button class="button secondary" type="submit">Save</button>
+        </form>
+        <div class="row-actions">
+          {% if task.status != "completed" %}
+            <form action="/tasks/{{ task.id }}/complete" method="post"><button class="button ghost" type="submit">Complete</button></form>
+          {% endif %}
+          <form action="/tasks/{{ task.id }}/delete" method="post"><button class="button danger" type="submit">Delete</button></form>
+        </div>
+      </article>
+    {% else %}
+      <p class="muted">No tasks match the current filter.</p>
+    {% endfor %}
+  </div>
+</section>
+

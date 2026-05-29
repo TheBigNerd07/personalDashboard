@@ -1,0 +1,24 @@
+services:
+  command-center:
+    build: .
+    container_name: command-center
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      APP_NAME: ${APP_NAME:-Command Center}
+      APP_PASSWORD: ${APP_PASSWORD:-}
+      SECRET_KEY: ${SECRET_KEY:-change-me}
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/command_center.db}
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://192.168.1.X:1234/v1}
+      LLM_MODEL: ${LLM_MODEL:-local-model}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-8}
+      WEATHER_ENABLED: ${WEATHER_ENABLED:-true}
+      WEATHER_LATITUDE: ${WEATHER_LATITUDE:-47.712}
+      WEATHER_LONGITUDE: ${WEATHER_LONGITUDE:--116.948}
+      WEATHER_TIMEZONE: ${WEATHER_TIMEZONE:-America/Los_Angeles}
+    volumes:
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

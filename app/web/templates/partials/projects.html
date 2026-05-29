@@ -1,0 +1,52 @@
+<section id="projects" class="panel span-2">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">Status</p>
+      <h2>Projects</h2>
+    </div>
+  </div>
+  <form action="/projects" method="post" class="stack add-form">
+    <div class="inline-form">
+      <input name="name" placeholder="Project name" required>
+      <input name="category" placeholder="Category" value="Personal">
+      <select name="status">
+        {% for status in project_statuses %}
+          <option value="{{ status }}" {% if status == "active" %}selected{% endif %}>{{ status }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <textarea name="description" rows="2" placeholder="Description"></textarea>
+    <input name="next_action" placeholder="Next action">
+    <input name="link" placeholder="Optional link">
+    <button class="button primary" type="submit">Add Project</button>
+  </form>
+
+  <div class="item-list">
+    {% for project in projects %}
+      <article class="item">
+        <form action="/projects/{{ project.id }}/update" method="post" class="edit-grid project-grid">
+          <input name="name" value="{{ project.name }}" required>
+          <input name="category" value="{{ project.category }}">
+          <select name="status">
+            {% for status in project_statuses %}
+              <option value="{{ status }}" {% if project.status == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+          <input name="link" value="{{ project.link or '' }}" placeholder="Link">
+          <textarea name="description" rows="2">{{ project.description }}</textarea>
+          <input name="next_action" value="{{ project.next_action }}" placeholder="Next action">
+          <button class="button secondary" type="submit">Save</button>
+        </form>
+        <div class="row-actions">
+          {% if project.link %}
+            <a class="button ghost" href="{{ project.link }}" target="_blank" rel="noreferrer">Open</a>
+          {% endif %}
+          <form action="/projects/{{ project.id }}/delete" method="post"><button class="button danger" type="submit">Delete</button></form>
+        </div>
+      </article>
+    {% else %}
+      <p class="muted">No projects yet.</p>
+    {% endfor %}
+  </div>
+</section>
+

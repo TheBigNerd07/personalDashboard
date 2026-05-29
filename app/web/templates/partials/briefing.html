@@ -1,0 +1,28 @@
+<section id="briefing" class="panel span-2">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">Daily Briefing</p>
+      <h2>{% if briefing.mode == "ai" %}Local AI Briefing{% else %}Basic Briefing{% endif %}</h2>
+    </div>
+    <form action="/briefing/regenerate" method="post">
+      <button class="button secondary" type="submit">Generate with Local AI</button>
+    </form>
+  </div>
+  {% if briefing.notice %}
+    <p class="notice">{{ briefing.notice }}</p>
+  {% endif %}
+  {% if latest_ai_notice %}
+    <p class="notice">{{ latest_ai_notice }}</p>
+  {% endif %}
+  {% if briefing.last_ai_markdown %}
+    <details class="last-ai">
+      <summary>Last AI briefing{% if briefing.last_ai_generated_at %} · {{ briefing.last_ai_generated_at }}{% endif %}</summary>
+      <div class="briefing-body">{{ briefing.last_ai_markdown | briefing_markdown }}</div>
+    </details>
+  {% endif %}
+  <div class="briefing-body">{{ briefing.markdown | briefing_markdown }}</div>
+  {% if not llm_enabled %}
+    <p class="muted">LM Studio is disabled. Set <code>LLM_ENABLED=true</code> when a reachable local server is ready.</p>
+  {% endif %}
+</section>
+

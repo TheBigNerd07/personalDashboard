@@ -1,0 +1,50 @@
+<section id="services" class="panel span-2">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">Homelab</p>
+      <h2>Service Cards</h2>
+    </div>
+    <form action="/services/check" method="post">
+      <button class="button secondary" type="submit">Check Health</button>
+    </form>
+  </div>
+  <form action="/services" method="post" class="inline-form add-form">
+    <input name="name" placeholder="Service name" required>
+    <input name="url" placeholder="URL">
+    <input name="category" placeholder="Category" value="homelab">
+    <input name="healthcheck_url" placeholder="Healthcheck URL">
+    <input type="number" name="sort_order" value="100" aria-label="Sort order">
+    <button class="button primary" type="submit">Add</button>
+  </form>
+
+  <div class="service-grid">
+    {% for service in services %}
+      <article class="service-card status-{{ service.last_status }}">
+        <div class="service-topline">
+          <span class="status-dot" aria-hidden="true"></span>
+          <strong>{{ service.name }}</strong>
+          <span class="badge">{{ service.last_status }}</span>
+        </div>
+        <p>{{ service.description }}</p>
+        {% if service.url %}
+          <a href="{{ service.url }}" target="_blank" rel="noreferrer">{{ service.url }}</a>
+        {% endif %}
+        <form action="/services/{{ service.id }}/update" method="post" class="stack service-edit">
+          <input name="name" value="{{ service.name }}" required>
+          <input name="url" value="{{ service.url }}">
+          <input name="description" value="{{ service.description }}" placeholder="Description">
+          <input name="category" value="{{ service.category }}">
+          <input name="healthcheck_url" value="{{ service.healthcheck_url or '' }}" placeholder="Healthcheck URL">
+          <input type="number" name="sort_order" value="{{ service.sort_order }}">
+          <button class="button secondary" type="submit">Save</button>
+        </form>
+        <form action="/services/{{ service.id }}/delete" method="post">
+          <button class="button danger" type="submit">Delete</button>
+        </form>
+      </article>
+    {% else %}
+      <p class="muted">No services configured.</p>
+    {% endfor %}
+  </div>
+</section>
+
