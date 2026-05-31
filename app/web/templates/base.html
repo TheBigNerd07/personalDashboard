@@ -8,8 +8,8 @@
   </head>
   <body>
     <header class="site-header">
-      <div>
-        <p class="eyebrow">Logan's local dashboard</p>
+      <div class="brand-lockup">
+        <p class="eyebrow">Logan</p>
         <h1>{{ app_name }}</h1>
       </div>
       <div class="header-meta">
@@ -17,15 +17,16 @@
           <time datetime="{{ now.isoformat() }}">{{ now.strftime("%A, %b %-d, %Y") }} · {{ now.strftime("%-I:%M %p") }}</time>
         {% endif %}
         <nav aria-label="Quick navigation">
-          <a href="#focus">Focus</a>
-          <a href="#tasks">Tasks</a>
-          <a href="#projects">Projects</a>
-          <a href="#services">Services</a>
-          <a href="#notes">Notes</a>
+          <a href="#today">Today</a>
+          <a href="#briefing">Briefing</a>
+          <a href="#homelab">Homelab</a>
+          <a href="#stride">Stride</a>
+          <a href="#school">School</a>
+          <a href="#links">Links</a>
         </nav>
         {% if auth_enabled %}
           <form action="/logout" method="post">
-            <button class="button ghost" type="submit">Log out</button>
+            <button class="button ghost" type="submit">Sign out</button>
           </form>
         {% endif %}
       </div>
@@ -35,4 +36,3 @@
     </main>
   </body>
 </html>
-

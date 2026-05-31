@@ -96,16 +96,18 @@ def build_dashboard_context(session: Session, weather: Optional[WeatherSnapshot]
     projects = session.exec(select(Project).where(Project.status.in_(["active", "paused"]))).all()
     services = session.exec(select(ServiceCard).order_by(ServiceCard.sort_order, ServiceCard.name)).all()
     notes = session.exec(select(Note).order_by(Note.updated_at.desc())).all()[:5]
+    active_project_dicts = [_project_dict(project) for project in projects if project.status == "active"]
 
     return {
         "date": today.isoformat(),
         "todays_focus": get_setting(session, "todays_focus", "Choose one important task and move it forward."),
-        "top_tasks": [_task_dict(task) for task in top_tasks],
+        "attention_signals": [_task_dict(task) for task in top_tasks if task.priority in {"urgent", "high"}],
         "upcoming_deadlines": [_task_dict(task) for task in upcoming_deadlines],
-        "active_projects": [_project_dict(project) for project in projects if project.status == "active"],
+        "active_projects": active_project_dicts,
         "paused_projects": [_project_dict(project) for project in projects if project.status == "paused"],
+        "homelab_projects": [project for project in active_project_dicts if project["category"].lower() == "homelab"],
+        "stride_shots_projects": [project for project in active_project_dicts if project["category"].lower() == "stride shots"],
         "homelab_attention_items": [_service_dict(service) for service in services if service.last_status == "down"],
-        "stride_shots_tasks": [_task_dict(task) for task in active_tasks if task.category == "stride_shots"],
         "recent_notes": [_note_dict(note) for note in notes],
         "weather": weather.__dict__ if weather else None,
     }
@@ -131,13 +133,22 @@ def fallback_briefing(context: dict[str, Any]) -> str:
     return "\n\n".join(
         [
             "## Focus\n" + context["todays_focus"],
-            "## Top Tasks\n" + _line_items(context["top_tasks"]),
+            "## Weather\n" + weather_line,
             "## Deadlines\n" + _line_items(context["upcoming_deadlines"], empty="No deadlines in the next 14 days."),
             "## Projects\n" + _line_items(context["active_projects"], title_key="name", empty="No active projects."),
-            "## Homelab\n" + _line_items(context["homelab_attention_items"], title_key="name", empty="No services currently marked down."),
-            "## Stride Shots\n" + _line_items(context["stride_shots_tasks"], empty="No Stride Shots tasks listed."),
-            "## Weather\n" + weather_line,
-            "## Suggested Next Action\nStart with the highest-priority task that has the nearest due date, then update one project next action.",
+            "## Homelab\n"
+            + _line_items(
+                context["homelab_attention_items"] or context["homelab_projects"],
+                title_key="name",
+                empty="No homelab alerts.",
+            ),
+            "## Stride Shots\n"
+            + _line_items(
+                context["stride_shots_projects"],
+                title_key="name",
+                empty="No Stride Shots project signal configured.",
+            ),
+            "## Watch\nKeep an eye on service health, dated school items, and any Stride Shots project with an upcoming delivery window.",
         ]
     )
 

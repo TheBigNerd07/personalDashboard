@@ -2,10 +2,10 @@
   <div class="panel-heading">
     <div>
       <p class="eyebrow">Daily Briefing</p>
-      <h2>{% if briefing.mode == "ai" %}Local AI Briefing{% else %}Basic Briefing{% endif %}</h2>
+      <h2>{% if briefing.mode == "ai" %}Local AI{% else %}Briefing{% endif %}</h2>
     </div>
     <form action="/briefing/regenerate" method="post">
-      <button class="button secondary" type="submit">Generate with Local AI</button>
+      <button class="button secondary" type="submit">Generate</button>
     </form>
   </div>
   {% if briefing.notice %}
@@ -25,4 +25,3 @@
     <p class="muted">LM Studio is disabled. Set <code>LLM_ENABLED=true</code> when a reachable local server is ready.</p>
   {% endif %}
 </section>
-

@@ -99,6 +99,11 @@ def _task_focus_key(task: Task):
     return (priority_order.get(task.priority, 4), task.due_date or date.max, task.created_at)
 
 
+def _project_sort_key(project: Project):
+    status_order = {"active": 0, "paused": 1, "completed": 2, "archived": 3}
+    return (status_order.get(project.status, 4), project.category, project.name)
+
+
 @router.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -171,6 +176,32 @@ async def index(
     weather = await fetch_weather(settings)
     briefing = await create_daily_briefing(session, weather=weather, use_ai=False)
 
+    service_summary = {
+        "up": len([service for service in services if service.last_status == "up"]),
+        "down": len([service for service in services if service.last_status == "down"]),
+        "unknown": len([service for service in services if service.last_status == "unknown"]),
+        "total": len(services),
+    }
+    active_projects = sorted([project for project in projects if project.status == "active"], key=_project_sort_key)
+    paused_projects = sorted([project for project in projects if project.status == "paused"], key=_project_sort_key)
+    school_deadlines = sorted(
+        [
+            task
+            for task in active_tasks
+            if task.category == "school" and task.due_date is not None and task.due_date <= today + timedelta(days=30)
+        ],
+        key=_task_focus_key,
+    )
+    stride_projects = [project for project in active_projects if project.category.lower() == "stride shots"]
+    homelab_projects = [project for project in active_projects if project.category.lower() == "homelab"]
+    school_projects = [project for project in active_projects if project.category.lower() == "school"]
+    stride_items = sorted([task for task in active_tasks if task.category == "stride_shots"], key=_task_focus_key)[:4]
+    homelab_items = sorted([task for task in active_tasks if task.category == "homelab"], key=_task_focus_key)[:4]
+    attention_items = [task for task in top_tasks if task.priority in {"urgent", "high"}]
+    down_services = [service for service in services if service.last_status == "down"]
+    quick_services = services[:8]
+    recent_notes = notes[:4]
+
     return templates.TemplateResponse(
         "index.html",
         {
@@ -195,6 +226,19 @@ async def index(
             "project_statuses": ["active", "paused", "completed", "archived"],
             "selected_status": status or "",
             "selected_category": category or "",
+            "active_projects": active_projects,
+            "paused_projects": paused_projects,
+            "school_deadlines": school_deadlines,
+            "stride_items": stride_items,
+            "homelab_items": homelab_items,
+            "stride_projects": stride_projects,
+            "homelab_projects": homelab_projects,
+            "school_projects": school_projects,
+            "attention_items": attention_items,
+            "down_services": down_services,
+            "quick_services": quick_services,
+            "recent_notes": recent_notes,
+            "service_summary": service_summary,
         },
     )
 

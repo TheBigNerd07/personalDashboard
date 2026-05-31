@@ -1,4 +1,4 @@
-<section id="weather" class="panel">
+<section id="weather" class="panel weather-panel">
   <div class="panel-heading">
     <div>
       <p class="eyebrow">Post Falls</p>
@@ -7,14 +7,13 @@
   </div>
   {% if weather.available %}
     <p class="weather-temp">{{ weather.temperature }}°F</p>
-    <p>{{ weather.condition }}</p>
+    <p class="weather-condition">{{ weather.condition }}</p>
     <div class="metric-row">
       <span>High {{ weather.high }}°F</span>
       <span>Low {{ weather.low }}°F</span>
       <span>{{ weather.precipitation_chance }}% precip</span>
     </div>
   {% else %}
-    <p class="notice">Weather unavailable.</p>
+    <p class="empty-state">Weather unavailable.</p>
   {% endif %}
 </section>
-

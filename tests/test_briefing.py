@@ -19,12 +19,12 @@ def test_fallback_briefing_contains_required_sections(db_session):
     markdown = fallback_briefing(context)
 
     assert "## Focus" in markdown
-    assert "## Top Tasks" in markdown
+    assert "## Weather" in markdown
     assert "## Deadlines" in markdown
     assert "## Projects" in markdown
     assert "## Homelab" in markdown
     assert "## Stride Shots" in markdown
-    assert "## Suggested Next Action" in markdown
+    assert "## Watch" in markdown
 
 
 def test_llm_unavailable_uses_basic_fallback(db_session, monkeypatch):
@@ -48,6 +48,6 @@ def test_llm_unavailable_uses_basic_fallback(db_session, monkeypatch):
 
     assert result.mode == "basic"
     assert result.notice == "Local AI unavailable - using basic briefing."
-    assert "Configure LM Studio" in result.markdown
+    assert "## Watch" in result.markdown
+    assert "Configure LM Studio" not in result.markdown
     reset_settings_cache()
-

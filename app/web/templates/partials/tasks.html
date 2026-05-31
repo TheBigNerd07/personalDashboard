@@ -1,7 +1,7 @@
 <section id="tasks" class="panel span-2">
   <div class="panel-heading">
     <div>
-      <p class="eyebrow">Execution</p>
+      <p class="eyebrow">Tasks</p>
       <h2>Tasks</h2>
     </div>
     <form action="/" method="get" class="filter-form">
@@ -21,56 +21,73 @@
     </form>
   </div>
 
-  <form action="/tasks" method="post" class="inline-form add-form">
-    <input name="title" placeholder="Add task" required>
-    <select name="category">
-      {% for category in task_categories %}
-        <option value="{{ category }}" {% if category == "unknown" %}selected{% endif %}>{{ category }}</option>
-      {% endfor %}
-    </select>
-    <select name="priority">
-      {% for priority in task_priorities %}
-        <option value="{{ priority }}" {% if priority == "normal" %}selected{% endif %}>{{ priority }}</option>
-      {% endfor %}
-    </select>
-    <input type="date" name="due_date" aria-label="Due date">
-    <button class="button primary" type="submit">Add</button>
-  </form>
+  <details class="composer">
+    <summary>New task</summary>
+    <form action="/tasks" method="post" class="inline-form add-form">
+      <input name="title" placeholder="Task" required>
+      <select name="category">
+        {% for category in task_categories %}
+          <option value="{{ category }}" {% if category == "unknown" %}selected{% endif %}>{{ category }}</option>
+        {% endfor %}
+      </select>
+      <select name="priority">
+        {% for priority in task_priorities %}
+          <option value="{{ priority }}" {% if priority == "normal" %}selected{% endif %}>{{ priority }}</option>
+        {% endfor %}
+      </select>
+      <input type="date" name="due_date" aria-label="Due date">
+      <button class="button primary" type="submit">Add</button>
+    </form>
+  </details>
 
   <div class="item-list">
     {% for task in tasks %}
       <article class="item">
-        <form action="/tasks/{{ task.id }}/update" method="post" class="edit-grid">
-          <input name="title" value="{{ task.title }}" aria-label="Task title" required>
-          <select name="priority" aria-label="Priority">
-            {% for priority in task_priorities %}
-              <option value="{{ priority }}" {% if task.priority == priority %}selected{% endif %}>{{ priority }}</option>
-            {% endfor %}
-          </select>
-          <select name="category" aria-label="Category">
-            {% for category in task_categories %}
-              <option value="{{ category }}" {% if task.category == category %}selected{% endif %}>{{ category }}</option>
-            {% endfor %}
-          </select>
-          <select name="status" aria-label="Status">
-            {% for status in task_statuses %}
-              <option value="{{ status }}" {% if task.status == status %}selected{% endif %}>{{ status }}</option>
-            {% endfor %}
-          </select>
-          <input type="date" name="due_date" value="{{ task.due_date or '' }}" aria-label="Due date">
-          <textarea name="description" rows="2" placeholder="Description">{{ task.description }}</textarea>
-          <button class="button secondary" type="submit">Save</button>
-        </form>
-        <div class="row-actions">
-          {% if task.status != "completed" %}
-            <form action="/tasks/{{ task.id }}/complete" method="post"><button class="button ghost" type="submit">Complete</button></form>
-          {% endif %}
-          <form action="/tasks/{{ task.id }}/delete" method="post"><button class="button danger" type="submit">Delete</button></form>
+        <div class="item-summary">
+          <div>
+            <h3>{{ task.title }}</h3>
+            <p class="item-meta">
+              <span class="badge priority-{{ task.priority }}">{{ task.priority }}</span>
+              <span>{{ task.category }}</span>
+              <span>{{ task.status }}</span>
+              {% if task.due_date %}<span>Due {{ task.due_date }}</span>{% endif %}
+            </p>
+            {% if task.description %}<p class="item-description">{{ task.description }}</p>{% endif %}
+          </div>
+          <div class="row-actions">
+            {% if task.status != "completed" %}
+              <form action="/tasks/{{ task.id }}/complete" method="post"><button class="button ghost" type="submit">Done</button></form>
+            {% endif %}
+            <details class="inline-details">
+              <summary>Edit</summary>
+              <form action="/tasks/{{ task.id }}/update" method="post" class="edit-grid">
+                <input name="title" value="{{ task.title }}" aria-label="Task title" required>
+                <select name="priority" aria-label="Priority">
+                  {% for priority in task_priorities %}
+                    <option value="{{ priority }}" {% if task.priority == priority %}selected{% endif %}>{{ priority }}</option>
+                  {% endfor %}
+                </select>
+                <select name="category" aria-label="Category">
+                  {% for category in task_categories %}
+                    <option value="{{ category }}" {% if task.category == category %}selected{% endif %}>{{ category }}</option>
+                  {% endfor %}
+                </select>
+                <select name="status" aria-label="Status">
+                  {% for status in task_statuses %}
+                    <option value="{{ status }}" {% if task.status == status %}selected{% endif %}>{{ status }}</option>
+                  {% endfor %}
+                </select>
+                <input type="date" name="due_date" value="{{ task.due_date or '' }}" aria-label="Due date">
+                <textarea name="description" rows="2" placeholder="Description">{{ task.description }}</textarea>
+                <button class="button secondary" type="submit">Save</button>
+              </form>
+            </details>
+            <form action="/tasks/{{ task.id }}/delete" method="post"><button class="button danger" type="submit">Delete</button></form>
+          </div>
         </div>
       </article>
     {% else %}
-      <p class="muted">No tasks match the current filter.</p>
+      <p class="empty-state">No tasks match the current filter.</p>
     {% endfor %}
   </div>
 </section>
-

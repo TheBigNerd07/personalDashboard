@@ -37,12 +37,12 @@ class LMStudioClient:
             f"{json.dumps(dashboard_context, indent=2, default=str)}\n\n"
             "Return markdown with these sections:\n"
             "- Focus\n"
-            "- Top Tasks\n"
+            "- Weather\n"
             "- Deadlines\n"
             "- Projects\n"
             "- Homelab\n"
             "- Stride Shots\n"
-            "- Suggested Next Action"
+            "- Watch"
         )
         payload = {
             "model": self.settings.llm_model,

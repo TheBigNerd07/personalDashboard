@@ -1,33 +1,47 @@
 <section id="notes" class="panel span-2">
   <div class="panel-heading">
     <div>
-      <p class="eyebrow">Capture</p>
+      <p class="eyebrow">Notes</p>
       <h2>Quick Notes</h2>
     </div>
   </div>
-  <form action="/notes" method="post" class="stack add-form">
-    <input name="title" placeholder="Note title" required>
-    <textarea name="body" rows="3" placeholder="Capture the thought"></textarea>
-    <input name="tags" placeholder="tags, comma-separated">
-    <button class="button primary" type="submit">Add Note</button>
-  </form>
+  <details class="composer">
+    <summary>New note</summary>
+    <form action="/notes" method="post" class="stack add-form">
+      <input name="title" placeholder="Title" required>
+      <textarea name="body" rows="3" placeholder="Capture the thought"></textarea>
+      <input name="tags" placeholder="tags, comma-separated">
+      <button class="button primary" type="submit">Add</button>
+    </form>
+  </details>
   <div class="item-list">
     {% for note in notes %}
       <article class="item">
-        <form action="/notes/{{ note.id }}/update" method="post" class="stack">
-          <input name="title" value="{{ note.title }}" required>
-          <textarea name="body" rows="3">{{ note.body }}</textarea>
-          <input name="tags" value="{{ note.tags }}">
-          <button class="button secondary" type="submit">Save</button>
-        </form>
-        <div class="row-actions">
-          <span class="muted">{{ note.updated_at.strftime("%b %-d, %-I:%M %p") }}</span>
-          <form action="/notes/{{ note.id }}/delete" method="post"><button class="button danger" type="submit">Delete</button></form>
+        <div class="item-summary">
+          <div>
+            <h3>{{ note.title }}</h3>
+            {% if note.body %}<p class="item-description">{{ note.body }}</p>{% endif %}
+            <p class="item-meta">
+              <span>{{ note.updated_at.strftime("%b %-d, %-I:%M %p") }}</span>
+              {% if note.tags %}<span>{{ note.tags }}</span>{% endif %}
+            </p>
+          </div>
+          <div class="row-actions">
+            <details class="inline-details">
+              <summary>Edit</summary>
+              <form action="/notes/{{ note.id }}/update" method="post" class="stack note-edit">
+                <input name="title" value="{{ note.title }}" required>
+                <textarea name="body" rows="3">{{ note.body }}</textarea>
+                <input name="tags" value="{{ note.tags }}">
+                <button class="button secondary" type="submit">Save</button>
+              </form>
+            </details>
+            <form action="/notes/{{ note.id }}/delete" method="post"><button class="button danger" type="submit">Delete</button></form>
+          </div>
         </div>
       </article>
     {% else %}
-      <p class="muted">No notes captured yet.</p>
+      <p class="empty-state">No notes captured yet.</p>
     {% endfor %}
   </div>
 </section>
-
